@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"server-hivemind/config"
 	"server-hivemind/handlers"
 	"server-hivemind/utils"
 	"time"
@@ -11,6 +12,12 @@ import (
 )
 
 func main() {
+	// DB CONFIGURATION
+	config.LoadEnv()
+	dbConnectionString := config.GetDBConnectionString()
+	config.InitDB(dbConnectionString)
+
+	// Router init
 	router := mux.NewRouter()
 
 	// HANDLERS
@@ -32,6 +39,7 @@ func main() {
 
 	log.Println("Starting server on :8080")
 
+	// Server init
 	s := http.Server{
 		Addr:         ":8080",
 		Handler:      router,
@@ -40,6 +48,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
+	// Server run
 	err := s.ListenAndServe()
 	if err != nil {
 		log.Fatalf("Could not start server: %s\n", err)
