@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"log"
 	"server-hivemind/config"
 )
@@ -12,13 +11,13 @@ type User struct {
 	Password string `json:"password"`
 }
 
-func GetUsers() []*User {
+func GetUsers() ([]*User, error) {
 	db := config.GetDB()
 
 	rows, err := db.Query("SELECT id, username, password FROM users")
 	if err != nil {
 		log.Printf("Error querying users: %v", err)
-		return nil
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -33,39 +32,44 @@ func GetUsers() []*User {
 		users = append(users, &user)
 	}
 
-	return users
+	return users, nil
 }
 
-func GetUser(id int) *User {
+func GetUser(id int) (*User, error) {
 	db := config.GetDB()
 
 	var user User
 	err := db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", id).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil
-		}
 		log.Printf("Error querying user: %v", err)
-		return nil
+		return nil, err
 	}
 
-	return &user
+	return &user, nil
 }
 
-// var users = []*User{
-// 	{
-// 		ID:       1,
-// 		Username: "carletto",
-// 		Password: "carl123",
-// 	},
-// 	{
-// 		ID:       2,
-// 		Username: "paky55",
-// 		Password: "ppp",
-// 	},
-// 	{
-// 		ID:       3,
-// 		Username: "graffioh",
-// 		Password: "gthebest",
-// 	},
-// }
+func CreateUser(user User) (*User, error) {
+	db := config.GetDB()
+
+	// Hash the user's password before storing it
+	// hashedPassword, err := HashPassword(user.Password)
+	// if err != nil {
+	//     log.Printf("Error hashing password: %v", err)
+	//     return nil, err
+	// }
+
+	stmt, err := db.Prepare("INSERT INTO users(username, password) VALUES($1, $2) RETURNING id")
+	if err != nil {
+		log.Printf("Error preparing statement: %v", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(user.Username, user.Password).Scan(&user.ID)
+	if err != nil {
+		log.Printf("Error executing statement: %v", err)
+		return nil, err
+	}
+
+	return &user, nil
+}

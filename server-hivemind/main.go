@@ -12,8 +12,9 @@ import (
 )
 
 func main() {
-	// DB CONFIGURATION
 	config.LoadEnv()
+
+	// DB CONFIGURATION
 	dbConnectionString := config.GetDBConnectionString()
 	config.InitDB(dbConnectionString)
 
@@ -24,6 +25,9 @@ func main() {
 	//
 	// Users
 	uh := handlers.NewUsers()
+	//
+	// Posts
+	ph := handlers.NewPosts()
 
 	// ROUTES
 	//
@@ -31,6 +35,11 @@ func main() {
 	router.HandleFunc("/user", uh.GetUsers).Methods("GET")
 	router.HandleFunc("/user/{id:[0-9]+}", uh.GetUser).Methods("GET")
 	router.HandleFunc("/user", uh.CreateUser).Methods("POST")
+	//
+	// Posts
+	router.HandleFunc("/post", ph.GetPosts).Methods("GET")
+	router.HandleFunc("/post/{id:[0-9]+}", ph.GetPost).Methods("GET")
+	router.HandleFunc("/post", ph.CreatePost).Methods("POST")
 
 	// MIDDLEWARES
 	//
@@ -39,7 +48,7 @@ func main() {
 
 	log.Println("Starting server on :8080")
 
-	// Server init
+	// Init server
 	s := http.Server{
 		Addr:         ":8080",
 		Handler:      router,
@@ -48,7 +57,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// Server run
+	// Serve server
 	err := s.ListenAndServe()
 	if err != nil {
 		log.Fatalf("Could not start server: %s\n", err)

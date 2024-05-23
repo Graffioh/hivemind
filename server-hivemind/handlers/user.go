@@ -16,7 +16,12 @@ func NewUsers() *Users {
 }
 
 func (u Users) GetUsers(rw http.ResponseWriter, r *http.Request) {
-	users := models.GetUsers()
+	users, err := models.GetUsers()
+
+	if err != nil {
+		http.Error(rw, "Error getting users", http.StatusBadRequest)
+		return
+	}
 
 	rw.Header().Set("Content-Type", "application/json")
 	utils.ToJSON(rw, users)
@@ -31,7 +36,12 @@ func (u Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.GetUser(id)
+	user, err := models.GetUser(id)
+
+	if err != nil {
+		http.Error(rw, "No user found", http.StatusBadRequest)
+		return
+	}
 
 	rw.Header().Set("Content-Type", "application/json")
 	utils.ToJSON(rw, user)
