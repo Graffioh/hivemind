@@ -3,18 +3,23 @@ import { useState } from "react";
 interface Post {
   id: number;
   content: string;
+  created_at: Date;
+  up_vote?: number;
+  down_vote?: number;
 }
 
 export default function Post({ post }: { post: Post }) {
-  const [likeCounter, setLikeCounter] = useState<number>(0);
-  const [dislikeCounter, setDislikeCounter] = useState<number>(0);
+  const [upVoteCounter, setUpVoteCounter] = useState<number>(post.up_vote ?? 0);
+  const [downVoteCounter, setDownVoteCounter] = useState<number>(
+    post.down_vote ?? 0
+  );
 
-  function handleLikeCounter() {
-    setLikeCounter(likeCounter + 1);
+  function handleUpVoteCounter() {
+    setUpVoteCounter(upVoteCounter + 1);
   }
 
-  function handleDislikeCounter() {
-    setDislikeCounter(dislikeCounter + 1);
+  function handleDownVoteCounter() {
+    setDownVoteCounter(downVoteCounter + 1);
   }
 
   return (
@@ -27,16 +32,16 @@ export default function Post({ post }: { post: Post }) {
           </div>
           <div className="flex mb-2">
             <div className="mx-2">
-              <button onClick={handleLikeCounter} className="w-6 h-6">
+              <button onClick={handleUpVoteCounter} className="w-6 h-6">
                 ↑
               </button>
-              <a className="ml-2 text-orange-600">{likeCounter}</a>
+              <a className="ml-2 text-orange-600">{upVoteCounter}</a>
             </div>
             <div className="mx-2">
-              <button onClick={handleDislikeCounter} className="w-6 h-6">
+              <button onClick={handleDownVoteCounter} className="w-6 h-6">
                 ↓
               </button>
-              <a className="ml-2">{dislikeCounter}</a>
+              <a className="ml-2">{downVoteCounter}</a>
             </div>
             <div className="mx-2">
               <button>comment</button>

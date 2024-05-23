@@ -1,31 +1,57 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 import Post from "../components/post";
-import LoginPage from "./LoginPage";
+import LoginSection from "./LoginSection";
 
 interface Post {
   id: number;
+  user_id: number;
   content: string;
+  created_at: Date;
+  up_vote?: number;
+  down_vote?: number;
 }
 
 export default function HomePage() {
   //   const navigate = useNavigate();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: 1,
-      content:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
-    },
-  ]);
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  function handlePost() {
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const response = await fetch("http://localhost:8080/post");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setPosts(data);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    }
+
+    fetchPosts();
+  }, []);
+
+  async function handlePost() {
     if (textAreaRef.current) {
       const content = textAreaRef.current.value;
-      setPosts((prevPosts) => [
-        ...prevPosts,
-        { id: prevPosts.length + 1, content },
-      ]);
+
+      const post: Post = {
+        id: Date.now(),
+        user_id: 1,
+        content: content,
+        created_at: new Date(),
+      };
+
+      const postResponse = await fetch("http://localhost:8080/post", {
+        method: "POST",
+        body: JSON.stringify(post),
+      });
+
+      console.log(postResponse);
+
       textAreaRef.current.value = "";
     }
   }
@@ -42,7 +68,7 @@ export default function HomePage() {
         >
           Login
         </button> */}
-        <LoginPage />
+        <LoginSection />
         <div className="flex flex-col items-center">
           <textarea
             ref={textAreaRef}
@@ -57,7 +83,7 @@ export default function HomePage() {
         <div className="mt-4 border-2 border-stone-600 rounded">
           <a className="font-bold text-white text-xl">Board</a>
           {posts.map((post) => {
-            return <Post post={post} />;
+            return <Post key={post.id} post={post} />;
           })}
         </div>
       </div>
