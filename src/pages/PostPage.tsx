@@ -30,7 +30,7 @@ const fetchPost = async (postId: string) => {
   return response.json();
 };
 
-const fetchComments = async (postId: number) => {
+const fetchComments = async (postId: string) => {
   const response = await fetch("http://localhost:8080/comment/" + postId);
   if (!response.ok) {
     throw new Error("Network response was not ok");
@@ -49,8 +49,8 @@ export default function PostPage() {
   });
 
   const { data: comments = [], error: commentsError } = useQuery<Comment[]>({
-    queryKey: ["comments", post?.id],
-    queryFn: () => fetchComments(post!.id),
+    queryKey: ["comments", postId],
+    queryFn: () => fetchComments(postId!),
     enabled: !!post,
   });
 
