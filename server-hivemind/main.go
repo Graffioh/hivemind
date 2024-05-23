@@ -27,11 +27,16 @@ func main() {
 	// HANDLERS
 	//
 	// Users
-	uh := handlers.NewUsers()
+	ur := repository.NewUserRepository(db)
+	uh := handlers.NewUsers(ur)
 	//
 	// Posts
 	pr := repository.NewPostRepository(db)
 	ph := handlers.NewPosts(pr)
+	//
+	// Comments
+	cr := repository.NewCommentRepository(db)
+	ch := handlers.NewComments(cr)
 
 	// ROUTES
 	//
@@ -44,6 +49,12 @@ func main() {
 	router.HandleFunc("/post", ph.GetPosts).Methods("GET")
 	router.HandleFunc("/post/{id:[0-9]+}", ph.GetPost).Methods("GET")
 	router.HandleFunc("/post", ph.CreatePost).Methods("POST")
+	// router.HandleFunc("/post/up/{id:[0-9]+}", ph.UpdateUpVote).Methods("PUT")
+	// router.HandleFunc("/post/down/{id:[0-9]+}", ph.UpdateDownVote).Methods("PUT")
+	//
+	// Comments
+	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.GetComments).Methods("GET")
+	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.CreateComment).Methods("POST")
 
 	// MIDDLEWARES
 	//

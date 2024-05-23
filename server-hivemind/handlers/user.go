@@ -1,22 +1,26 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"server-hivemind/models"
+	"server-hivemind/repository"
 	"server-hivemind/utils"
 	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
-type Users struct{}
-
-func NewUsers() *Users {
-	return &Users{}
+type Users struct {
+	repo *repository.UserRepository
 }
 
-func (u Users) GetUsers(rw http.ResponseWriter, r *http.Request) {
-	users, err := models.GetUsers()
+func NewUsers(repo *repository.UserRepository) *Users {
+	return &Users{repo: repo}
+}
+
+func (u *Users) GetUsers(rw http.ResponseWriter, r *http.Request) {
+	users, err := u.repo.GetUsers()
 
 	if err != nil {
 		http.Error(rw, "Error getting users", http.StatusBadRequest)
@@ -27,7 +31,7 @@ func (u Users) GetUsers(rw http.ResponseWriter, r *http.Request) {
 	utils.ToJSON(rw, users)
 }
 
-func (u Users) GetUser(rw http.ResponseWriter, r *http.Request) {
+func (u *Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 
@@ -36,7 +40,7 @@ func (u Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := models.GetUser(id)
+	user, err := u.repo.GetUser(id)
 
 	if err != nil {
 		http.Error(rw, "No user found", http.StatusBadRequest)
@@ -47,5 +51,25 @@ func (u Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 	utils.ToJSON(rw, user)
 }
 
-func (u Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
+func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
+	var user models.User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(rw, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if user.Username == "" || user.Password == "" {
+		http.Error(rw, "Username and Password are required", http.StatusBadRequest)
+		return
+	}
+
+	createdPost, err := u.repo.CreateUser(user)
+	if err != nil {
+		http.Error(rw, "Error creating user", http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+	utils.ToJSON(rw, createdPost)
 }

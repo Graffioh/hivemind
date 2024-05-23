@@ -70,3 +70,11 @@ func (p *Posts) CreatePost(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusCreated)
 	utils.ToJSON(rw, createdPost)
 }
+
+// func (p *Posts) UpdateUpVote(rw http.ResponseWriter, r *http.Request) {
+
+// }
+
+// func (p *Posts) UpdateDownVote(rw http.ResponseWriter, r *http.Request) {
+
+// }
