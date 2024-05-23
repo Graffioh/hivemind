@@ -1,6 +1,7 @@
-import { useRef, useState, useEffect } from "react";
-import Post from "../components/post";
+import { useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LoginSection from "./LoginSection";
+import Post from "../components/post";
 
 interface Post {
   id: number;
@@ -11,47 +12,62 @@ interface Post {
   down_vote?: number;
 }
 
+async function fetchPosts(): Promise<Post[]> {
+  const response = await fetch("http://localhost:8080/post");
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
+}
+
+async function createPost(newPost: Post): Promise<Post> {
+  const response = await fetch("http://localhost:8080/post", {
+    method: "POST",
+    body: JSON.stringify(newPost),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create post");
+  }
+
+  return response.json();
+}
+
 export default function HomePage() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const response = await fetch("http://localhost:8080/post");
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = (await response.json()) as Post[];
-        setPosts(data);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      }
-    }
+  const { data: posts = [], error } = useQuery<Post[], Error>({
+    queryKey: ["posts"],
+    queryFn: fetchPosts,
+  });
 
-    fetchPosts();
-  }, []);
+  const mutation = useMutation<Post, Error, Post>({
+    mutationFn: createPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 
-  async function handlePost() {
+  const handlePost = () => {
     if (textAreaRef.current) {
       const content = textAreaRef.current.value;
 
-      const post: Post = {
+      const newPost: Post = {
         id: Date.now(),
         user_id: 1,
         content: content,
         created_at: new Date(),
       };
 
-      const postResponse = await fetch("http://localhost:8080/post", {
-        method: "POST",
-        body: JSON.stringify(post),
-      });
-
-      console.log(postResponse);
+      mutation.mutate(newPost);
 
       textAreaRef.current.value = "";
     }
+  };
+
+  if (error) {
+    return <span>Error: {error.message}</span>;
   }
 
   return (
@@ -59,8 +75,6 @@ export default function HomePage() {
       <div className="text-3xl font-bold">Hivemind</div>
       <div className="flex flex-col w-full">
         <LoginSection />
-        {/* <div className="text-2xl m-8">Welcome mammt123!</div>
-        <div className="text-2xl m-8">What are you thinking?</div> */}
         <div className="flex flex-col items-center">
           <textarea
             ref={textAreaRef}
@@ -74,9 +88,9 @@ export default function HomePage() {
         </div>
         <div className="mt-4 rounded w-[75vw]">
           <p className="font-bold text-white text-2xl">Board</p>
-          {posts.map((post) => {
-            return <Post key={post.id} post={post} />;
-          })}
+          {posts.map((post) => (
+            <Post key={post.id} post={post} />
+          ))}
         </div>
       </div>
     </>

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+// src/components/PostPage.jsx
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import Post from "../components/post";
 
@@ -21,50 +22,41 @@ interface Comment {
   down_vote?: number;
 }
 
+const fetchPost = async (postId: string) => {
+  const response = await fetch("http://localhost:8080/post/" + postId);
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
+};
+
+const fetchComments = async (postId: number) => {
+  const response = await fetch("http://localhost:8080/comment/" + postId);
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
+};
+
 export default function PostPage() {
   const [searchParams] = useSearchParams();
-  const [post, setPost] = useState<Post | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const postId = searchParams.get("post_id");
 
-  useEffect(() => {
-    async function fetchPost() {
-      try {
-        const response = await fetch(
-          "http://localhost:8080/post/" + searchParams.get("post_id")
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = (await response.json()) as Post;
-        setPost(data);
-      } catch (error) {
-        console.error("Error fetching post:", error);
-      }
-    }
+  const { data: post, error: postError } = useQuery<Post>({
+    queryKey: ["post", postId],
+    queryFn: () => fetchPost(postId!),
+    enabled: !!postId,
+  });
 
-    fetchPost();
-  }, [searchParams]);
+  const { data: comments = [], error: commentsError } = useQuery<Comment[]>({
+    queryKey: ["comments", post?.id],
+    queryFn: () => fetchComments(post!.id),
+    enabled: !!post,
+  });
 
-  useEffect(() => {
-    async function fetchComments() {
-      if (post) {
-        try {
-          const response = await fetch(
-            "http://localhost:8080/comment/" + post.id
-          );
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          const data = (await response.json()) as Comment[];
-          setComments(data);
-        } catch (error) {
-          console.error("Error fetching comments:", error);
-        }
-      }
-    }
-
-    fetchComments();
-  }, [post]);
+  if (postError || commentsError) {
+    return <span>Error: {postError?.message || commentsError?.message}</span>;
+  }
 
   return (
     <>
