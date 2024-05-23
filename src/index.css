@@ -9,7 +9,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #191919;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -41,20 +41,33 @@ h1 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #424141;
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
-  border-color: #646cff;
+  background-color: #595959;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+#button-post {
+  border-radius: 0px;
+  background-color: #191919;
+}
+#button-post:hover {
+  background-color: #242424;
+  border-radius: 8px;
+}
+#button-post:focus,
+#button-post:focus-visible {
+  outline: 0
 }
 
 @media (prefers-color-scheme: light) {

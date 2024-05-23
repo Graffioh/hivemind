@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
 import Post from "../components/post";
 import LoginSection from "./LoginSection";
 
@@ -13,7 +12,6 @@ interface Post {
 }
 
 export default function HomePage() {
-  //   const navigate = useNavigate();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [posts, setPosts] = useState<Post[]>([]);
 
@@ -24,7 +22,7 @@ export default function HomePage() {
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
-        const data = await response.json();
+        const data = (await response.json()) as Post[];
         setPosts(data);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -58,17 +56,11 @@ export default function HomePage() {
 
   return (
     <>
+      <div className="text-3xl font-bold">Hivemind</div>
       <div className="flex flex-col w-full">
-        {/* <div>Home Page</div> */}
-        {/* <button
-          onClick={() => {
-            navigate("/");
-          }}
-          className="m-4 w-24 h-12"
-        >
-          Login
-        </button> */}
         <LoginSection />
+        {/* <div className="text-2xl m-8">Welcome mammt123!</div>
+        <div className="text-2xl m-8">What are you thinking?</div> */}
         <div className="flex flex-col items-center">
           <textarea
             ref={textAreaRef}
@@ -80,8 +72,8 @@ export default function HomePage() {
             post
           </button>
         </div>
-        <div className="mt-4 border-2 border-stone-600 rounded">
-          <a className="font-bold text-white text-xl">Board</a>
+        <div className="mt-4 rounded w-[75vw]">
+          <p className="font-bold text-white text-2xl">Board</p>
           {posts.map((post) => {
             return <Post key={post.id} post={post} />;
           })}
