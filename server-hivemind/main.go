@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"server-hivemind/config"
 	"server-hivemind/handlers"
+	"server-hivemind/repository"
 	"server-hivemind/utils"
 	"time"
 
@@ -18,6 +19,8 @@ func main() {
 	dbConnectionString := config.GetDBConnectionString()
 	config.InitDB(dbConnectionString)
 
+	db := config.GetDB()
+
 	// Router init
 	router := mux.NewRouter()
 
@@ -27,7 +30,8 @@ func main() {
 	uh := handlers.NewUsers()
 	//
 	// Posts
-	ph := handlers.NewPosts()
+	pr := repository.NewPostRepository(db)
+	ph := handlers.NewPosts(pr)
 
 	// ROUTES
 	//
