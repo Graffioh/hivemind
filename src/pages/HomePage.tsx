@@ -81,14 +81,14 @@ export default function HomePage() {
               ref={textAreaRef}
               rows={10}
               cols={50}
-              className="p-1"
+              className="p-1 rounded border-2 border-neutral-600"
             ></textarea>
             <button onClick={handlePost} className="m-4 w-24 h-12">
               post
             </button>
           </div>
           <div className="flex flex-col mx-20 rounded items-center mt-4">
-            <p className="font-bold text-white text-2xl">Board</p>
+            <p className="font-bold text-white text-2xl">Thoughts Board</p>
             {posts.map((post) => (
               <PostSection key={post.id} post={post}/>
             ))}

@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import VoteArrows from "./VoteArrows";
 
 interface Post {
   id: number;
@@ -11,20 +11,7 @@ interface Post {
 }
 
 export default function PostSection({ post }: { post: Post }) {
-  const [upVoteCounter, setUpVoteCounter] = useState<number>(post.up_vote ?? 0);
-  const [downVoteCounter, setDownVoteCounter] = useState<number>(
-    post.down_vote ?? 0
-  );
-
   const navigate = useNavigate();
-
-  function handleUpVoteCounter() {
-    setUpVoteCounter(upVoteCounter + 1);
-  }
-
-  function handleDownVoteCounter() {
-    setDownVoteCounter(downVoteCounter + 1);
-  }
 
   function goToPostPage() {
     navigate(`/post-page?post_id=${post.id}`);
@@ -44,30 +31,7 @@ export default function PostSection({ post }: { post: Post }) {
               {post.content}
             </div>
             <div className="flex">
-              <div className="mx-2">
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleUpVoteCounter();
-                  }}
-                  className="w-6 h-6"
-                >
-                  ↑
-                </button>
-                <p className="ml-2 text-orange-600 inline">{upVoteCounter}</p>
-              </div>
-              <div className="mx-2">
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleDownVoteCounter();
-                  }}
-                  className="w-6 h-6"
-                >
-                  ↓
-                </button>
-                <p className="ml-2 inline text-violet-500">{downVoteCounter}</p>
-              </div>
+              <VoteArrows vertical={false} />
               <div className="mx-1">
                 <button
                   className="px-2"
