@@ -1,7 +1,6 @@
 // src/components/PostPage.jsx
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import Post from "../components/post";
 
 interface Post {
   id: number;
@@ -60,10 +59,11 @@ export default function PostPage() {
 
   return (
     <>
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col">
         {post ? (
           <>
-            <div>{post.content}</div>
+            <div className="flex text-xl border-b-2">{post.content}</div>
+            <div className="italic">Comments</div>
             {comments ? (
               <div>
                 {comments.map((comment) => (

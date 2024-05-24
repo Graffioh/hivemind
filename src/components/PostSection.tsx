@@ -10,7 +10,7 @@ interface Post {
   down_vote?: number;
 }
 
-export default function Post({ post }: { post: Post }) {
+export default function PostSection({ post }: { post: Post }) {
   const [upVoteCounter, setUpVoteCounter] = useState<number>(post.up_vote ?? 0);
   const [downVoteCounter, setDownVoteCounter] = useState<number>(
     post.down_vote ?? 0
@@ -32,7 +32,7 @@ export default function Post({ post }: { post: Post }) {
 
   return (
     <>
-      <div className="flex flex-col text-left mx-4">
+      <div className="flex flex-col text-left mx-4 w-full">
         <div className="border-b-2 border-stone-600 mx-4 py-3">
           <button
             id="button-post"
@@ -70,9 +70,6 @@ export default function Post({ post }: { post: Post }) {
               </div>
               <div className="mx-1">
                 <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                  }}
                   className="px-2"
                 >
                   💬
