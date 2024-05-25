@@ -37,6 +37,10 @@ func main() {
 	// Comments
 	cr := repository.NewCommentRepository(db)
 	ch := handlers.NewComments(cr)
+	//
+	// Reactions
+	rr := repository.NewReactionRepository(db)
+	rh := handlers.NewReactions(rr)
 
 	// ROUTES
 	//
@@ -55,6 +59,11 @@ func main() {
 	// Comments
 	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.GetComments).Methods("GET")
 	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.CreateComment).Methods("POST")
+	//
+	// Reactions
+	router.HandleFunc("/reaction/post/{post_id:[0-9]+}", rh.GetPostReactions).Methods("GET")
+	router.HandleFunc("/reaction/comment/{comment_id:[0-9]+}", rh.GetCommentReactions).Methods("GET")
+	router.HandleFunc("/reaction", rh.CreateReaction).Methods("POST")
 
 	// MIDDLEWARES
 	//
