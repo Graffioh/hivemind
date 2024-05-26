@@ -31,7 +31,7 @@ export default function PostSection({ post }: { post: Post }) {
               {post.content}
             </div>
             <div className="flex">
-              <VoteArrows vertical={false} />
+              <VoteArrows vertical={false} postId={post.id} commentId={null}/>
               <div className="mx-1">
                 <button
                   className="px-2"

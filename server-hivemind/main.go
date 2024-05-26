@@ -6,10 +6,10 @@ import (
 	"server-hivemind/config"
 	"server-hivemind/handlers"
 	"server-hivemind/repository"
-	"server-hivemind/utils"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -23,6 +23,12 @@ func main() {
 
 	// Router init
 	router := mux.NewRouter()
+
+	cors := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+	})
 
 	// HANDLERS
 	//
@@ -65,17 +71,14 @@ func main() {
 	router.HandleFunc("/reaction/comment/{comment_id:[0-9]+}", rh.GetCommentReactions).Methods("GET")
 	router.HandleFunc("/reaction", rh.CreateReaction).Methods("POST")
 
-	// MIDDLEWARES
-	//
-	// CORS
-	router.Use(utils.CORS)
+	server_handler := cors.Handler(router)
 
 	log.Println("Starting server on :8080")
 
 	// Init server
 	s := http.Server{
 		Addr:         ":8080",
-		Handler:      router,
+		Handler:      server_handler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,

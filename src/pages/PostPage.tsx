@@ -66,13 +66,11 @@ export default function PostPage() {
   const { data: post, error: postError } = useQuery<Comment>({
     queryKey: ["post", postId],
     queryFn: () => fetchPost(postId!),
-    enabled: !!postId,
   });
 
   const { data: comments = [], error: commentsError } = useQuery<Comment[]>({
     queryKey: ["comments", postId],
     queryFn: () => fetchComments(postId!),
-    enabled: !!post,
   });
 
   if (postError || commentsError) {
@@ -103,7 +101,7 @@ export default function PostPage() {
         {post ? (
           <>
             <div className="flex items-center border-b-2">
-              <VoteArrows vertical={true} />
+              <VoteArrows vertical={true} postId={post.id} commentId={null}/>
               <div className="flex flex-col">
                 <div className="text-stone-400 ml-2 mt-2">
                   {" "}
@@ -121,7 +119,7 @@ export default function PostPage() {
             <button className="m-2 w-20 h-8" onClick={handleCommentCreation}>
               comment
             </button>
-            <div className="italic ml-2 mb-2">Comments</div>
+            <div className="italic ml-2 mb-2 font-bold text-xl">Comments</div>
             {comments ? (
               <div className="ml-2">
                 {comments.map((comment) => (

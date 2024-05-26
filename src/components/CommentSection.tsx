@@ -13,11 +13,12 @@ interface Comment {
 export default function CommentSection({ comment }: { comment: Comment }) {
   return (
     <>
-      <div className="mb-4">
-        <div className="mb-1 bg-neutral-800 rounded w-fit p-2">
+      <div className="mb-4 flex flex-col">
+        <div className="text-stone-400 mt-2"> &lt; username &gt;</div>
+        <div className="bg-neutral-800 rounded w-fit p-2 mb-1">
           {comment.content}
         </div>
-        <VoteArrows vertical={false} />
+          <VoteArrows vertical={false} postId={null} commentId={comment.id}/>
       </div>
     </>
   );
