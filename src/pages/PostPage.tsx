@@ -97,11 +97,11 @@ export default function PostPage() {
 
   return (
     <>
-      <div className="flex flex-col">
+      <div className="flex flex-col pl-4">
         {post ? (
           <>
             <div className="flex items-center border-b-2">
-              <VoteArrows vertical={true} postId={post.id} commentId={null}/>
+              <VoteArrows vertical={true} postId={post.id} commentId={null} />
               <div className="flex flex-col">
                 <div className="text-stone-400 ml-2 mt-2">
                   {" "}
@@ -114,21 +114,26 @@ export default function PostPage() {
               ref={textAreaRef}
               rows={3}
               cols={60}
-              className="w-fit p-1 mt-6 ml-2 rounded border-2 border-neutral-600"
+              className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
             ></textarea>
-            <button className="m-2 w-20 h-8" onClick={handleCommentCreation}>
+            <button
+              className="my-3 w-20 h-8"
+              onClick={handleCommentCreation}
+            >
               comment
             </button>
-            <div className="italic ml-2 mb-2 font-bold text-xl">Comments</div>
-            {comments ? (
-              <div className="ml-2">
-                {comments.map((comment) => (
-                  <CommentSection key={comment.id} comment={comment} />
-                ))}
-              </div>
-            ) : (
-              <div className="ml-2">No comments.</div>
-            )}
+            <div className="">
+              <div className="italic mb-2 font-bold text-xl">Comments</div>
+              {comments ? (
+                <div className="">
+                  {comments.map((comment) => (
+                    <CommentSection key={comment.id} comment={comment} />
+                  ))}
+                </div>
+              ) : (
+                <div className="">No comments.</div>
+              )}
+            </div>
           </>
         ) : (
           <div>Loading...</div>
