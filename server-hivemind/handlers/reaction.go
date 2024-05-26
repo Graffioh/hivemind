@@ -62,8 +62,8 @@ func (reacs *Reactions) CreateReaction(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if reaction.PostID == 0 || reaction.UserID == 0 || reaction.ReactionType == "" || (reaction.ReactionValue != 1 && reaction.ReactionValue != -1) {
-		http.Error(rw, "Post ID, User ID, Reaction Type and Reaction Value are required", http.StatusBadRequest)
+	if reaction.UserID == 0 || reaction.ReactionType == "" || (reaction.ReactionValue != 1 && reaction.ReactionValue != -1) {
+		http.Error(rw, "User ID, Reaction Type and Reaction Value are required", http.StatusBadRequest)
 		return
 	}
 
