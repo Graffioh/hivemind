@@ -37,7 +37,7 @@ func (r *PostRepository) GetPosts() ([]*models.Post, error) {
 }
 
 func (r *PostRepository) GetPostsWithPagination(page int) ([]*models.Post, error) {
-	rows, err := r.db.Query("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts ORDER BY id LIMIT 5 OFFSET $1", page)
+	rows, err := r.db.Query("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts ORDER BY id LIMIT 5 OFFSET $1", page*5)
 	if err != nil {
 		log.Printf("Error querying posts: %v", err)
 		return nil, err
@@ -56,6 +56,17 @@ func (r *PostRepository) GetPostsWithPagination(page int) ([]*models.Post, error
 	}
 
 	return posts, nil
+}
+
+func (r *PostRepository) GetTotalPostsCount() (*int, error) {
+	var id *int
+	err := r.db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&id)
+	if err != nil {
+		log.Printf("Error querying post: %v", err)
+		return nil, err
+	}
+
+	return id, nil
 }
 
 func (r *PostRepository) GetPost(id int) (*models.Post, error) {

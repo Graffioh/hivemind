@@ -1,7 +1,12 @@
-import { useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useEffect } from "react";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import LoginSection from "../components/LoginSection";
 import PostSection from "../components/PostSection";
+import { useInView } from "react-intersection-observer";
 
 interface Post {
   id: number;
@@ -12,12 +17,40 @@ interface Post {
   down_vote?: number;
 }
 
-async function fetchPosts(): Promise<Post[]> {
-  const response = await fetch("http://localhost:8080/post");
+async function fetchPostsPaginated({
+  pageParam,
+}: {
+  pageParam: number;
+}): Promise<{
+  data: Post[];
+  currentPage: number;
+  nextPage: number | null;
+}> {
+  const countResponse = await fetch("http://localhost:8080/post/count");
+  if (!countResponse.ok) {
+    throw new Error("Network response was not ok");
+  }
+
+  const postsCount = await countResponse.json();
+
+  const response = await fetch(
+    "http://localhost:8080/post/pagination?page=" + pageParam
+  );
   if (!response.ok) {
     throw new Error("Network response was not ok");
   }
-  return response.json();
+
+  const posts = await response.json();
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: posts,
+        currentPage: pageParam,
+        nextPage: (pageParam + 1) * 5 < postsCount ? pageParam + 1 : null,
+      });
+    }, 1000);
+  });
 }
 
 async function createPost(newPost: Post): Promise<Post> {
@@ -37,10 +70,20 @@ export default function HomePage() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
 
-  const { data: posts = [], error } = useQuery<Post[], Error>({
+  const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["posts"],
-    queryFn: fetchPosts,
+    queryFn: fetchPostsPaginated,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
   });
+
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, inView]);
 
   const mutation = useMutation<Post, Error, Post>({
     mutationFn: createPost,
@@ -89,9 +132,21 @@ export default function HomePage() {
           </div>
           <div className="flex flex-col mx-20 rounded items-center mt-4">
             <p className="font-bold text-white text-2xl">Thoughts Board</p>
-            {posts.map((post) => (
-              <PostSection key={post.id} post={post}/>
-            ))}
+            {data ? (
+              data.pages.map((page) => (
+                <div
+                  key={page.currentPage}
+                  className="flex flex-col gap-2 w-full"
+                >
+                  {page.data.map((post) => (
+                    <PostSection key={post.id} post={post} />
+                  ))}
+                </div>
+              ))
+            ) : (
+              <div>...</div>
+            )}
+            <div ref={ref}>{isFetchingNextPage && "Loading..."}</div>
           </div>
         </div>
       </div>

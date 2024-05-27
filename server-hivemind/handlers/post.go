@@ -48,6 +48,17 @@ func (p *Posts) GetPostsWithPagination(rw http.ResponseWriter, r *http.Request) 
 	utils.ToJSON(rw, posts)
 }
 
+func (p *Posts) GetTotalPostsCount(rw http.ResponseWriter, r *http.Request) {
+	count, err := p.repo.GetTotalPostsCount()
+	if err != nil {
+		http.Error(rw, "Error getting posts count, posts not found", http.StatusNotFound)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	utils.ToJSON(rw, count)
+}
+
 func (p *Posts) GetPost(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
