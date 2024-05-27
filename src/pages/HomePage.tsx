@@ -47,7 +47,7 @@ async function fetchPostsPaginated({
       resolve({
         data: posts,
         currentPage: pageParam,
-        nextPage: (pageParam + 1) * 5 < postsCount ? pageParam + 1 : null,
+        nextPage: (pageParam + 1) * 10 < postsCount ? pageParam + 1 : null,
       });
     }, 1000);
   });
