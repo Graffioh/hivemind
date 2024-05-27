@@ -30,6 +30,24 @@ func (p *Posts) GetPosts(rw http.ResponseWriter, r *http.Request) {
 	utils.ToJSON(rw, posts)
 }
 
+func (p *Posts) GetPostsWithPagination(rw http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(rw, "Invalid page number", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := p.repo.GetPostsWithPagination(page)
+	if err != nil {
+		http.Error(rw, "Error getting posts", http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	utils.ToJSON(rw, posts)
+}
+
 func (p *Posts) GetPost(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

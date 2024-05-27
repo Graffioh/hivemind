@@ -57,6 +57,7 @@ func main() {
 	//
 	// Posts
 	router.HandleFunc("/post", ph.GetPosts).Methods("GET")
+	router.HandleFunc("/post/pagination", ph.GetPostsWithPagination).Methods("GET")
 	router.HandleFunc("/post/{id:[0-9]+}", ph.GetPost).Methods("GET")
 	router.HandleFunc("/post", ph.CreatePost).Methods("POST")
 	// router.HandleFunc("/post/up/{id:[0-9]+}", ph.UpdateUpVote).Methods("PUT")

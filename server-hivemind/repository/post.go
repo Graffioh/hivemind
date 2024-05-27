@@ -36,6 +36,28 @@ func (r *PostRepository) GetPosts() ([]*models.Post, error) {
 	return posts, nil
 }
 
+func (r *PostRepository) GetPostsWithPagination(page int) ([]*models.Post, error) {
+	rows, err := r.db.Query("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts ORDER BY id LIMIT 5 OFFSET $1", page)
+	if err != nil {
+		log.Printf("Error querying posts: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []*models.Post
+	for rows.Next() {
+		var post models.Post
+		err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
+		if err != nil {
+			log.Printf("Error scanning post row: %v", err)
+			continue
+		}
+		posts = append(posts, &post)
+	}
+
+	return posts, nil
+}
+
 func (r *PostRepository) GetPost(id int) (*models.Post, error) {
 	var post models.Post
 	err := r.db.QueryRow("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts WHERE id = $1", id).
