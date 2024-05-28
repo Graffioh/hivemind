@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -72,6 +72,8 @@ export default function HomePage() {
   const titleInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
+  const [isPostValid, setIsPostValid] = useState(false);
+
   const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["posts"],
     queryFn: fetchPostsPaginated,
@@ -96,10 +98,6 @@ export default function HomePage() {
 
   const handlePost = () => {
     if (textAreaRef.current && titleInputRef.current) {
-      if(textAreaRef.current.value == "" || titleInputRef.current.value == "") {
-        return;
-      }
-
       const title = titleInputRef.current.value;
       const content = textAreaRef.current.value;
 
@@ -115,6 +113,7 @@ export default function HomePage() {
 
       titleInputRef.current.value = "";
       textAreaRef.current.value = "";
+      setIsPostValid(false);
     }
   };
 
@@ -129,7 +128,22 @@ export default function HomePage() {
         <div className="flex flex-col w-full">
           <LoginSection />
           <div className="flex flex-col items-center">
-            <input ref={titleInputRef} placeholder="Title" required></input>
+            <input
+              ref={titleInputRef}
+              className="p-1 rounded border-x-2 border-t-2 border-neutral-600"
+              placeholder="Title"
+              required
+              onChange={() => {
+                const areInputsEmpty =
+                  titleInputRef.current?.value == "" ||
+                  textAreaRef.current?.value == "";
+                if (areInputsEmpty) {
+                  setIsPostValid(false);
+                } else {
+                  setIsPostValid(true);
+                }
+              }}
+            ></input>
             <textarea
               ref={textAreaRef}
               rows={10}
@@ -137,8 +151,22 @@ export default function HomePage() {
               className="p-1 rounded border-2 border-neutral-600"
               placeholder="Write your thoughts..."
               required
+              onChange={() => {
+                const areInputsEmpty =
+                  titleInputRef.current?.value == "" ||
+                  textAreaRef.current?.value == "";
+                if (areInputsEmpty) {
+                  setIsPostValid(false);
+                } else {
+                  setIsPostValid(true);
+                }
+              }}
             ></textarea>
-            <button onClick={handlePost} className="m-4 w-24 h-12">
+            <button
+              onClick={handlePost}
+              className="m-4 w-24 h-12 disabled:bg-stone-800"
+              disabled={!isPostValid}
+            >
               post
             </button>
           </div>
