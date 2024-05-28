@@ -4,38 +4,8 @@ import CommentSection from "../components/CommentSection";
 import VoteArrows from "../components/VoteArrows";
 import { useRef } from "react";
 import { Post, Comment } from "../types";
-
-const fetchPost = async (postId: string) => {
-  const response = await fetch("http://localhost:8080/post/" + postId);
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-  return response.json();
-};
-
-const fetchComments = async (postId: string) => {
-  const response = await fetch("http://localhost:8080/comment/" + postId);
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-  return response.json();
-};
-
-async function createComment(
-  newComment: Comment,
-  postId: string
-): Promise<Comment> {
-  const response = await fetch("http://localhost:8080/comment/" + postId, {
-    method: "POST",
-    body: JSON.stringify(newComment),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create comment");
-  }
-
-  return response.json();
-}
+import { fetchPost } from "../api/post";
+import { fetchComments, createComment } from "../api/comment";
 
 export default function PostPage() {
   const [searchParams] = useSearchParams();
@@ -43,12 +13,8 @@ export default function PostPage() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<
-    Comment,
-    Error,
-    { newComment: Comment; postId: string }
-  >({
-    mutationFn: ({ newComment, postId }) => createComment(newComment, postId),
+  const mutation = useMutation<Comment, Error, Comment>({
+    mutationFn: createComment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments"] });
     },
@@ -80,7 +46,7 @@ export default function PostPage() {
         created_at: new Date(),
       };
 
-      mutation.mutate({ newComment, postId });
+      mutation.mutate(newComment);
 
       textAreaRef.current.value = "";
     }
