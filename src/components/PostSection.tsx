@@ -1,15 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import VoteArrows from "./VoteArrows";
-
-interface Post {
-  id: number;
-  user_id: number;
-  title: string;
-  content: string;
-  created_at: Date;
-  up_vote?: number;
-  down_vote?: number;
-}
+import { Post } from "../types";
 
 export default function PostSection({ post }: { post: Post }) {
   const navigate = useNavigate();
@@ -32,13 +23,9 @@ export default function PostSection({ post }: { post: Post }) {
               {post.title}
             </div>
             <div className="flex">
-              <VoteArrows vertical={false} postId={post.id} commentId={null}/>
+              <VoteArrows vertical={false} postId={post.id} commentId={null} />
               <div className="mx-1">
-                <button
-                  className="px-2"
-                >
-                  💬
-                </button>
+                <button className="px-2">💬</button>
               </div>
             </div>
           </button>

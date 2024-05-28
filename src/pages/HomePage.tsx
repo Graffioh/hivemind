@@ -7,16 +7,7 @@ import {
 import LoginSection from "../components/LoginSection";
 import PostSection from "../components/PostSection";
 import { useInView } from "react-intersection-observer";
-
-interface Post {
-  id: number;
-  user_id: number;
-  title: string;
-  content: string;
-  created_at: Date;
-  up_vote?: number;
-  down_vote?: number;
-}
+import { Post } from "../types";
 
 async function fetchPostsPaginated({
   pageParam,
@@ -130,7 +121,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center">
             <input
               ref={titleInputRef}
-              className="p-1 rounded border-x-2 border-t-2 border-neutral-600"
+              className="w-64 p-1 rounded border-x-2 border-t-2 border-neutral-600"
               placeholder="Title"
               required
               onChange={() => {

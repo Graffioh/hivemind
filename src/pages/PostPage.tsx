@@ -3,26 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import CommentSection from "../components/CommentSection";
 import VoteArrows from "../components/VoteArrows";
 import { useRef } from "react";
-
-interface Post {
-  id: number;
-  user_id: number;
-  title: string;
-  content: string;
-  created_at: Date;
-  up_vote?: number;
-  down_vote?: number;
-}
-
-interface Comment {
-  id: number;
-  post_id: number;
-  user_id: number;
-  content: string;
-  created_at: Date;
-  up_vote?: number;
-  down_vote?: number;
-}
+import { Post, Comment } from "../types";
 
 const fetchPost = async (postId: string) => {
   const response = await fetch("http://localhost:8080/post/" + postId);
@@ -112,9 +93,9 @@ export default function PostPage() {
           <>
             <div className="flex items-center border-b-2 pl-2">
               <VoteArrows vertical={true} postId={post.id} commentId={null} />
-              <div className="flex flex-col pl-3 pb-4">
-                <div className="text-stone-400 mt-2"> &lt; username &gt;</div>
-                <div className="text-2xl font-bold">{post.title}</div>
+              <div className="flex flex-col pl-3 pb-4 mt-2">
+                <div className="text-stone-400"> &lt; username &gt;</div>
+                <div className="text-2xl font-bold mb-1">{post.title}</div>
                 <div className="flex text-xl">{post.content}</div>
               </div>
             </div>

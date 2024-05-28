@@ -10,12 +10,12 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-        <Router>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/post-page" element={<PostPage />} />
-          </Routes>
-        </Router>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/post-page" element={<PostPage />} />
+        </Routes>
+      </Router>
     </QueryClientProvider>
   );
 }

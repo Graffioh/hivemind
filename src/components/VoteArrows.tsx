@@ -1,18 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Reaction } from "../types";
 
 interface Votes {
   Upvotes: number;
   Downvotes: number;
-}
-
-interface Reaction {
-  id: number;
-  user_id: number;
-  post_id: number | null;
-  comment_id: number | null;
-  reaction_type: string;
-  reaction: number;
-  created_at: Date;
 }
 
 async function fetchReactions(
