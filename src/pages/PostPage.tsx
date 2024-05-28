@@ -4,6 +4,16 @@ import CommentSection from "../components/CommentSection";
 import VoteArrows from "../components/VoteArrows";
 import { useRef } from "react";
 
+interface Post {
+  id: number;
+  user_id: number;
+  title: string;
+  content: string;
+  created_at: Date;
+  up_vote?: number;
+  down_vote?: number;
+}
+
 interface Comment {
   id: number;
   post_id: number;
@@ -63,7 +73,7 @@ export default function PostPage() {
     },
   });
 
-  const { data: post, error: postError } = useQuery<Comment>({
+  const { data: post, error: postError } = useQuery<Post>({
     queryKey: ["post", postId],
     queryFn: () => fetchPost(postId!),
   });
@@ -97,32 +107,29 @@ export default function PostPage() {
 
   return (
     <>
-      <div className="flex flex-col pl-4">
+      <div className="flex flex-col">
         {post ? (
           <>
-            <div className="flex items-center border-b-2">
+            <div className="flex items-center border-b-2 pl-2">
               <VoteArrows vertical={true} postId={post.id} commentId={null} />
-              <div className="flex flex-col">
-                <div className="text-stone-400 ml-2 mt-2">
-                  {" "}
-                  &lt; username &gt;
-                </div>
-                <div className="flex text-xl pl-2 pb-4">{post.content}</div>
+              <div className="flex flex-col pl-3 pb-4">
+                <div className="text-stone-400 mt-2"> &lt; username &gt;</div>
+                <div className="text-2xl font-bold">{post.title}</div>
+                <div className="flex text-xl">{post.content}</div>
               </div>
             </div>
-            <textarea
-              ref={textAreaRef}
-              rows={3}
-              cols={60}
-              className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
-            ></textarea>
-            <button
-              className="my-3 w-20 h-8"
-              onClick={handleCommentCreation}
-            >
-              comment
-            </button>
-            <div className="">
+            <div className="pl-4 flex flex-col">
+              <textarea
+                ref={textAreaRef}
+                rows={3}
+                cols={60}
+                className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
+              ></textarea>
+              <button className="my-3 w-20 h-8" onClick={handleCommentCreation}>
+                comment
+              </button>
+            </div>
+            <div className="pl-4">
               <div className="italic mb-2 font-bold text-xl">Comments</div>
               {comments ? (
                 <div className="">

@@ -71,7 +71,7 @@ func (r *PostRepository) GetTotalPostsCount() (*int, error) {
 
 func (r *PostRepository) GetPost(id int) (*models.Post, error) {
 	var post models.Post
-	err := r.db.QueryRow("SELECT id, user_id, content, title, created_at, up_vote, down_vote FROM posts WHERE id = $1", id).
+	err := r.db.QueryRow("SELECT id, user_id, title, content, created_at, up_vote, down_vote FROM posts WHERE id = $1", id).
 		Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
 	if err != nil {
 		log.Printf("Error querying post: %v", err)
