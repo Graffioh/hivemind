@@ -11,6 +11,7 @@ import { useInView } from "react-intersection-observer";
 interface Post {
   id: number;
   user_id: number;
+  title: string;
   content: string;
   created_at: Date;
   up_vote?: number;
@@ -68,6 +69,7 @@ async function createPost(newPost: Post): Promise<Post> {
 
 export default function HomePage() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
@@ -93,18 +95,25 @@ export default function HomePage() {
   });
 
   const handlePost = () => {
-    if (textAreaRef.current) {
+    if (textAreaRef.current && titleInputRef.current) {
+      if(textAreaRef.current.value == "" || titleInputRef.current.value == "") {
+        return;
+      }
+
+      const title = titleInputRef.current.value;
       const content = textAreaRef.current.value;
 
       const newPost: Post = {
         id: Date.now(),
         user_id: 1,
+        title: title,
         content: content,
         created_at: new Date(),
       };
 
       mutation.mutate(newPost);
 
+      titleInputRef.current.value = "";
       textAreaRef.current.value = "";
     }
   };
@@ -120,11 +129,14 @@ export default function HomePage() {
         <div className="flex flex-col w-full">
           <LoginSection />
           <div className="flex flex-col items-center">
+            <input ref={titleInputRef} placeholder="Title" required></input>
             <textarea
               ref={textAreaRef}
               rows={10}
               cols={50}
               className="p-1 rounded border-2 border-neutral-600"
+              placeholder="Write your thoughts..."
+              required
             ></textarea>
             <button onClick={handlePost} className="m-4 w-24 h-12">
               post

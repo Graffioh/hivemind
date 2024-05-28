@@ -4,6 +4,7 @@ import VoteArrows from "./VoteArrows";
 interface Post {
   id: number;
   user_id: number;
+  title: string;
   content: string;
   created_at: Date;
   up_vote?: number;
@@ -28,7 +29,7 @@ export default function PostSection({ post }: { post: Post }) {
           >
             <div className="text-stone-400 flex"> &lt; username &gt;</div>
             <div key={post.id} className="p-1 pb-4 pt-2 max-w-full text-left">
-              {post.content}
+              {post.title}
             </div>
             <div className="flex">
               <VoteArrows vertical={false} postId={post.id} commentId={null}/>

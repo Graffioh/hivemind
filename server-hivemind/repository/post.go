@@ -15,7 +15,7 @@ func NewPostRepository(db *sql.DB) *PostRepository {
 }
 
 func (r *PostRepository) GetPosts() ([]*models.Post, error) {
-	rows, err := r.db.Query("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts")
+	rows, err := r.db.Query("SELECT id, user_id, content, title, created_at, up_vote, down_vote FROM posts")
 	if err != nil {
 		log.Printf("Error querying posts: %v", err)
 		return nil, err
@@ -25,7 +25,7 @@ func (r *PostRepository) GetPosts() ([]*models.Post, error) {
 	var posts []*models.Post
 	for rows.Next() {
 		var post models.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
+		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
 		if err != nil {
 			log.Printf("Error scanning post row: %v", err)
 			continue
@@ -37,7 +37,7 @@ func (r *PostRepository) GetPosts() ([]*models.Post, error) {
 }
 
 func (r *PostRepository) GetPostsWithPagination(page int) ([]*models.Post, error) {
-	rows, err := r.db.Query("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts ORDER BY created_at DESC LIMIT 10 OFFSET $1", page*5)
+	rows, err := r.db.Query("SELECT id, user_id, title, content, created_at, up_vote, down_vote FROM posts ORDER BY created_at DESC LIMIT 10 OFFSET $1", page*5)
 	if err != nil {
 		log.Printf("Error querying posts: %v", err)
 		return nil, err
@@ -47,7 +47,7 @@ func (r *PostRepository) GetPostsWithPagination(page int) ([]*models.Post, error
 	var posts []*models.Post
 	for rows.Next() {
 		var post models.Post
-		err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
+		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
 		if err != nil {
 			log.Printf("Error scanning post row: %v", err)
 			continue
@@ -71,8 +71,8 @@ func (r *PostRepository) GetTotalPostsCount() (*int, error) {
 
 func (r *PostRepository) GetPost(id int) (*models.Post, error) {
 	var post models.Post
-	err := r.db.QueryRow("SELECT id, user_id, content, created_at, up_vote, down_vote FROM posts WHERE id = $1", id).
-		Scan(&post.ID, &post.UserID, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
+	err := r.db.QueryRow("SELECT id, user_id, content, title, created_at, up_vote, down_vote FROM posts WHERE id = $1", id).
+		Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
 	if err != nil {
 		log.Printf("Error querying post: %v", err)
 		return nil, err
@@ -82,14 +82,14 @@ func (r *PostRepository) GetPost(id int) (*models.Post, error) {
 }
 
 func (r *PostRepository) CreatePost(post models.Post) (*models.Post, error) {
-	stmt, err := r.db.Prepare("INSERT INTO posts(user_id, content, created_at) VALUES($1, $2, $3) RETURNING id")
+	stmt, err := r.db.Prepare("INSERT INTO posts(user_id, title, content, created_at) VALUES($1, $2, $3, $4) RETURNING id")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return nil, err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(post.UserID, post.Content, post.CreatedAt).Scan(&post.ID)
+	err = stmt.QueryRow(post.UserID, post.Title, post.Content, post.CreatedAt).Scan(&post.ID)
 	if err != nil {
 		log.Printf("Error executing statement: %v", err)
 		return nil, err

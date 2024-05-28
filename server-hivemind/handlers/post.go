@@ -84,7 +84,7 @@ func (p *Posts) CreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if post.UserID == 0 || post.Content == "" {
+	if post.UserID == 0 || post.Title == "" || post.Content == "" {
 		http.Error(rw, "User ID and content are required", http.StatusBadRequest)
 		return
 	}
