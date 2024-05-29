@@ -1,49 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Reaction } from "../types";
-
-interface Votes {
-  Upvotes: number;
-  Downvotes: number;
-}
-
-async function fetchReactions(
-  postId: number | null,
-  commentId: number | null
-): Promise<Votes> {
-  if (postId) {
-    const response = await fetch(
-      `http://localhost:8080/reaction/post/${postId}`
-    );
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return response.json();
-  } else {
-    const response = await fetch(
-      `http://localhost:8080/reaction/comment/${commentId}`
-    );
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return response.json();
-  }
-}
-
-async function createReaction(newReaction: Reaction): Promise<Reaction> {
-  const response = await fetch("http://localhost:8080/reaction", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(newReaction),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create reaction");
-  }
-
-  return response.json();
-}
+import { Reaction, Votes } from "../types";
+import { fetchReactions, createReaction } from "../api/reaction";
 
 export default function VoteArrows({
   vertical,
@@ -115,7 +72,6 @@ export default function VoteArrows({
           ↓
         </button>
         <p className="ml-2 inline text-violet-500">{votes?.Downvotes}</p>{" "}
-        {/* Corrected to show downVotes */}
       </div>
     </div>
   );

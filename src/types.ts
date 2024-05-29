@@ -27,3 +27,8 @@ export interface Reaction {
   reaction: number;
   created_at: Date;
 }
+
+export interface Votes {
+  Upvotes: number;
+  Downvotes: number;
+}
