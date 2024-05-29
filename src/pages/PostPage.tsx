@@ -34,7 +34,7 @@ export default function PostPage() {
     return <span>Error: {postError?.message || commentsError?.message}</span>;
   }
 
-  const handleCommentCreation = () => {
+  function handleCommentCreation() {
     if (textAreaRef.current && postId) {
       const content = textAreaRef.current.value;
 
@@ -50,49 +50,75 @@ export default function PostPage() {
 
       textAreaRef.current.value = "";
     }
-  };
+  }
 
   return (
     <>
       <div className="flex flex-col">
         {post ? (
           <>
-            <div className="flex items-center border-b-2 pl-2">
-              <VoteArrows vertical={true} postId={post.id} commentId={null} />
-              <div className="flex flex-col pl-3 pb-4 mt-2">
-                <div className="text-stone-400"> &lt; username &gt;</div>
-                <div className="text-2xl font-bold mb-1">{post.title}</div>
-                <div className="flex text-xl">{post.content}</div>
-              </div>
-            </div>
-            <div className="pl-4 flex flex-col">
-              <textarea
-                ref={textAreaRef}
-                rows={3}
-                cols={60}
-                className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
-              ></textarea>
-              <button className="my-3 w-20 h-8" onClick={handleCommentCreation}>
-                comment
-              </button>
-            </div>
-            <div className="pl-4">
-              <div className="italic mb-2 font-bold text-xl">Comments</div>
-              {comments ? (
-                <div className="">
-                  {comments.map((comment) => (
-                    <CommentSection key={comment.id} comment={comment} />
-                  ))}
-                </div>
-              ) : (
-                <div className="">No comments.</div>
-              )}
-            </div>
+            <TopSection post={post} />
+            <CommentForm
+              handleCommentCreation={handleCommentCreation}
+              textAreaRef={textAreaRef}
+            />
+            <CommentsList comments={comments} />
           </>
         ) : (
           <div>Loading...</div>
         )}
       </div>
     </>
+  );
+}
+
+interface CommentFormProps {
+  handleCommentCreation: () => void;
+  textAreaRef: React.RefObject<HTMLTextAreaElement>;
+}
+
+function CommentForm({ handleCommentCreation, textAreaRef }: CommentFormProps) {
+  return (
+    <div className="pl-4 flex flex-col">
+      <textarea
+        ref={textAreaRef}
+        rows={3}
+        cols={60}
+        className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
+      ></textarea>
+      <button className="my-3 w-20 h-8" onClick={handleCommentCreation}>
+        comment
+      </button>
+    </div>
+  );
+}
+
+function TopSection({ post }: { post: Post }) {
+  return (
+    <div className="flex items-center border-b-2 pl-2">
+      <VoteArrows vertical={true} postId={post.id} commentId={null} />
+      <div className="flex flex-col pl-3 pb-4 mt-2">
+        <div className="text-stone-400"> &lt; username &gt;</div>
+        <div className="text-2xl font-bold mb-1">{post.title}</div>
+        <div className="flex text-xl">{post.content}</div>
+      </div>
+    </div>
+  );
+}
+
+function CommentsList({ comments }: { comments: Comment[] }) {
+  return (
+    <div className="pl-4">
+      <div className="italic mb-2 font-bold text-xl">Comments</div>
+      {comments ? (
+        <div className="">
+          {comments.map((comment) => (
+            <CommentSection key={comment.id} comment={comment} />
+          ))}
+        </div>
+      ) : (
+        <div className="">No comments.</div>
+      )}
+    </div>
   );
 }
