@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import CommentSection from "../components/CommentSection";
 import VoteArrows from "../components/VoteArrows";
 import { useRef } from "react";
 import { Post, Comment } from "../types";
@@ -122,3 +121,18 @@ function CommentsList({ comments }: { comments: Comment[] }) {
     </div>
   );
 }
+
+export function CommentSection({ comment }: { comment: Comment }) {
+  return (
+    <>
+      <div className="mb-4 flex flex-col">
+        <div className="text-stone-400 mt-2"> &lt; username &gt;</div>
+        <div className="bg-neutral-800 rounded w-fit p-2 mb-1">
+          {comment.content}
+        </div>
+        <VoteArrows vertical={false} postId={null} commentId={comment.id} />
+      </div>
+    </>
+  );
+}
+

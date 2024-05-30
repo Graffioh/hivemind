@@ -4,11 +4,11 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import LoginSection from "../components/LoginSection";
-import PostSection from "../components/PostSection";
+import { useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { Post } from "../types";
 import { fetchPostsPaginated, createPost } from "../api/post";
+import VoteArrows from "../components/VoteArrows";
 
 export default function HomePage() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -165,3 +165,67 @@ function ThoughtsBoard({ data, ref, isFetchingNextPage }: ThoughtsBoardProps) {
     </div>
   );
 }
+
+export function PostSection({ post }: { post: Post }) {
+  const navigate = useNavigate();
+
+  function goToPostPage() {
+    navigate(`/post-page?post_id=${post.id}`);
+  }
+
+  return (
+    <>
+      <div className="flex flex-col text-left mx-4 w-full">
+        <div className="border-b-2 border-stone-600 mx-4 py-3">
+          <button
+            id="button-post"
+            className="w-full py-2 px-1"
+            onClick={goToPostPage}
+          >
+            <div className="text-stone-400 flex"> &lt; username &gt;</div>
+            <div key={post.id} className="p-1 pb-4 pt-2 max-w-full text-left">
+              {post.title}
+            </div>
+            <div className="flex">
+              <VoteArrows vertical={false} postId={post.id} commentId={null} />
+              <div className="mx-1">
+                <button className="px-2">💬</button>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function LoginSection() {
+  //   const navigate = useNavigate();
+
+  const handleLogin = () => {
+    //   navigate("/home");
+  };
+
+  return (
+    <>
+      <div className="flex flex-col m-4 items-center justify-center">
+        <input
+          placeholder="username"
+          className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
+        ></input>
+        <input
+          type="password"
+          placeholder="password"
+          className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
+        ></input>
+        <button onClick={handleLogin} className="mb-2 w-32 h-8">
+          Login/Register
+        </button>
+        <div className="text-sm text-stone-400">
+          or register by simply entering a new username and password
+        </div>
+      </div>
+    </>
+  );
+}
+
