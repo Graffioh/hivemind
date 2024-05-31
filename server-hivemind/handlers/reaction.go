@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"server-hivemind/models"
 	"server-hivemind/repository"
@@ -70,11 +69,12 @@ func (reacs *Reactions) CreateReaction(rw http.ResponseWriter, r *http.Request) 
 
 	createdReaction, err := reacs.repo.CreateReaction(reaction)
 	if err != nil {
-		log.Print(err)
-		if duplicateErr, ok := err.(*repository.DuplicateReactionError); ok {
-			http.Error(rw, duplicateErr.Error(), http.StatusConflict)
-			return
-		}
+		// // Sending different errors (duplicated or not)
+
+		// if duplicateErr, ok := err.(*repository.DuplicateReactionError); ok {
+		// 	http.Error(rw, duplicateErr.Error(), http.StatusConflict)
+		// 	return
+		// }
 
 		http.Error(rw, "Error creating reaction", http.StatusInternalServerError)
 		return
