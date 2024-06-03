@@ -70,6 +70,7 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   false, // Set to true if using HTTPS
 		MaxAge:   token_exp * 24 * 60 * 60,
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	}
 	http.SetCookie(rw, cookie)
