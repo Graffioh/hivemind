@@ -19,18 +19,6 @@ func NewUsers(repo *repository.UserRepository) *Users {
 	return &Users{repo: repo}
 }
 
-func (u *Users) GetUsers(rw http.ResponseWriter, r *http.Request) {
-	users, err := u.repo.GetUsers()
-
-	if err != nil {
-		http.Error(rw, "Error getting users", http.StatusBadRequest)
-		return
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	utils.ToJSON(rw, users)
-}
-
 func (u *Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -63,7 +51,7 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdPost, err := u.repo.CreateUser(user)
+	createdUser, err := u.repo.CreateUser(user)
 	if err != nil {
 		http.Error(rw, "Error creating user", http.StatusInternalServerError)
 		return
@@ -71,5 +59,5 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	utils.ToJSON(rw, createdPost)
+	utils.ToJSON(rw, createdUser)
 }

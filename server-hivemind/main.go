@@ -13,6 +13,12 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatalf("Error running the app: %v", err)
+	}
+}
+
+func run() error {
 	config.LoadEnv()
 
 	// DB CONFIGURATION
@@ -24,7 +30,8 @@ func main() {
 	// Router init
 	router := mux.NewRouter()
 
-	cors := cors.New(cors.Options{
+	// AllowedOrigins: * only for dev env
+	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
@@ -51,7 +58,6 @@ func main() {
 	// ROUTES
 	//
 	// Users
-	router.HandleFunc("/user", uh.GetUsers).Methods("GET")
 	router.HandleFunc("/user/{id:[0-9]+}", uh.GetUser).Methods("GET")
 	router.HandleFunc("/user", uh.CreateUser).Methods("POST")
 	//
@@ -73,7 +79,7 @@ func main() {
 	router.HandleFunc("/reaction/comment/{comment_id:[0-9]+}", rh.GetCommentReactions).Methods("GET")
 	router.HandleFunc("/reaction", rh.CreateReaction).Methods("POST")
 
-	server_handler := cors.Handler(router)
+	server_handler := c.Handler(router)
 
 	log.Println("Starting server on :8080")
 
@@ -90,6 +96,8 @@ func main() {
 	err := s.ListenAndServe()
 	if err != nil {
 		log.Fatalf("Could not start server: %s\n", err)
+		return err
 	}
 
+	return nil
 }
