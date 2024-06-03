@@ -32,9 +32,10 @@ func run() error {
 
 	// AllowedOrigins: * only for dev env
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
 	})
 
 	// HANDLERS
@@ -58,7 +59,7 @@ func run() error {
 	// ROUTES
 	//
 	// Users
-	router.HandleFunc("/user/{id:[0-9]+}", uh.GetUser).Methods("GET")
+	router.HandleFunc("/user/current", uh.GetUser).Methods("GET")
 	router.HandleFunc("/user", uh.CreateUser).Methods("POST")
 	//
 	// Posts
@@ -67,8 +68,6 @@ func run() error {
 	router.HandleFunc("/post/count", ph.GetTotalPostsCount).Methods("GET")
 	router.HandleFunc("/post/{id:[0-9]+}", ph.GetPost).Methods("GET")
 	router.HandleFunc("/post", ph.CreatePost).Methods("POST")
-	// router.HandleFunc("/post/up/{id:[0-9]+}", ph.UpdateUpVote).Methods("PUT")
-	// router.HandleFunc("/post/down/{id:[0-9]+}", ph.UpdateDownVote).Methods("PUT")
 	//
 	// Comments
 	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.GetComments).Methods("GET")

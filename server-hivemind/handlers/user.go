@@ -6,9 +6,7 @@ import (
 	"server-hivemind/models"
 	"server-hivemind/repository"
 	"server-hivemind/utils"
-	"strconv"
-
-	"github.com/gorilla/mux"
+	"time"
 )
 
 type Users struct {
@@ -20,15 +18,22 @@ func NewUsers(repo *repository.UserRepository) *Users {
 }
 
 func (u *Users) GetUser(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-
+	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		http.Error(rw, "Failed to convert the id into integer", http.StatusBadRequest)
+		http.Error(rw, "Session not found in cookies", http.StatusBadRequest)
 		return
 	}
 
-	user, err := u.repo.GetUser(id)
+	sid := cookie.Value
+
+	s, err := utils.ValidateSession(sid)
+
+	if err != nil {
+		http.Error(rw, "Session not valid", http.StatusBadRequest)
+		return
+	}
+
+	user, err := u.repo.GetUser(s.UserID)
 
 	if err != nil {
 		http.Error(rw, "No user found", http.StatusBadRequest)
@@ -51,11 +56,23 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdUser, err := u.repo.CreateUser(user)
+	user.ID = time.Now().Unix()
+
+	createdUser, token, token_exp, err := u.repo.CreateUser(user)
 	if err != nil {
 		http.Error(rw, "Error creating user", http.StatusInternalServerError)
 		return
 	}
+
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    token,
+		HttpOnly: true,
+		Secure:   false, // Set to true if using HTTPS
+		MaxAge:   token_exp * 24 * 60 * 60,
+		Path:     "/",
+	}
+	http.SetCookie(rw, cookie)
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)

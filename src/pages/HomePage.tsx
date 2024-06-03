@@ -3,34 +3,46 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
+  useQuery,
+  QueryClient,
 } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
-import { Post } from "../types";
+import { Post, User } from "../types";
 import { fetchPostsPaginated, createPost } from "../api/post";
+import { fetchUserFromSession, createUser } from "../api/user";
 import VoteArrows from "../components/VoteArrows";
 
 export default function HomePage() {
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  const [isPostValid, setIsPostValid] = useState(false);
-
-  const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["posts"],
-    queryFn: fetchPostsPaginated,
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["current_user"],
+    queryFn: () => fetchUserFromSession(),
   });
 
-  const { ref, inView } = useInView();
+  return (
+    <>
+      <div className="flex flex-col justify-center items-center">
+        <div className="text-3xl font-bold mt-4">Hivemind</div>
+        <div className="flex flex-col w-full">
+          {currentUser ? (
+           <PostForm queryClient={queryClient} />
+          ) : (
+            <LoginSection queryClient={queryClient} />
+          )}
+          <ThoughtsBoard />
+        </div>
+      </div>
+    </>
+  );
+}
 
-  useEffect(() => {
-    if (inView) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, inView]);
+function PostForm({ queryClient }: { queryClient: QueryClient }) {
+  const [isPostValid, setIsPostValid] = useState(false);
+
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const mutation = useMutation<Post, Error, Post>({
     mutationFn: createPost,
@@ -38,6 +50,12 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
+
+  function handleIsPostValid() {
+    const title = titleInputRef.current?.value || "";
+    const content = textAreaRef.current?.value || "";
+    setIsPostValid(title !== "" && content !== "");
+  }
 
   function handlePost() {
     if (textAreaRef.current && titleInputRef.current) {
@@ -60,55 +78,6 @@ export default function HomePage() {
     }
   }
 
-  function handleInputChange() {
-    const title = titleInputRef.current?.value || "";
-    const content = textAreaRef.current?.value || "";
-    setIsPostValid(title !== "" && content !== "");
-  }
-
-  if (error) {
-    return <span>Error: {error.message}</span>;
-  }
-
-  return (
-    <>
-      <div className="flex flex-col justify-center items-center">
-        <div className="text-3xl font-bold mt-4">Hivemind</div>
-        <div className="flex flex-col w-full">
-          <LoginSection />
-          <PostForm
-            titleInputRef={titleInputRef}
-            textAreaRef={textAreaRef}
-            isPostValid={isPostValid}
-            handleInputChange={handleInputChange}
-            handlePost={handlePost}
-          />
-          <ThoughtsBoard
-            data={data}
-            ref={ref}
-            isFetchingNextPage={isFetchingNextPage}
-          />
-        </div>
-      </div>
-    </>
-  );
-}
-
-interface PostFormProps {
-  titleInputRef: React.RefObject<HTMLInputElement>;
-  textAreaRef: React.RefObject<HTMLTextAreaElement>;
-  isPostValid: boolean;
-  handleInputChange: () => void;
-  handlePost: () => void;
-}
-
-function PostForm({
-  titleInputRef,
-  textAreaRef,
-  isPostValid,
-  handleInputChange,
-  handlePost,
-}: PostFormProps) {
   return (
     <div className="flex flex-col items-center">
       <input
@@ -116,7 +85,7 @@ function PostForm({
         className="w-64 p-1 rounded border-x-2 border-t-2 border-neutral-600"
         placeholder="Title"
         required
-        onChange={handleInputChange}
+        onChange={handleIsPostValid}
       />
       <textarea
         ref={textAreaRef}
@@ -125,7 +94,7 @@ function PostForm({
         className="p-1 rounded border-2 border-neutral-600"
         placeholder="Write your thoughts..."
         required
-        onChange={handleInputChange}
+        onChange={handleIsPostValid}
       />
       <button
         onClick={handlePost}
@@ -138,14 +107,26 @@ function PostForm({
   );
 }
 
-interface ThoughtsBoardProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
-  ref: (node?: Element | null | undefined) => void;
-  isFetchingNextPage: boolean;
-}
+function ThoughtsBoard() {
+  const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ["posts"],
+    queryFn: fetchPostsPaginated,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+  });
 
-function ThoughtsBoard({ data, ref, isFetchingNextPage }: ThoughtsBoardProps) {
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, inView]);
+
+  if (error) {
+    return <span>Error: {error.message}</span>;
+  }
+
   return (
     <div className="flex flex-col mx-20 rounded items-center mt-4">
       <p className="font-bold text-white text-2xl">Thoughts Board</p>
@@ -199,12 +180,34 @@ export function PostSection({ post }: { post: Post }) {
   );
 }
 
-export function LoginSection() {
-  //   const navigate = useNavigate();
+export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLogin = () => {
-    //   navigate("/home");
-  };
+  const mutation = useMutation<User, Error, User>({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+
+  function handleLogin() {
+    const username = usernameInputRef.current?.value ?? "";
+    const password = passwordInputRef.current?.value ?? "";
+
+    if (!username || !password) {
+      console.error("Username or password is empty");
+      return;
+    }
+
+    const newUser: User = {
+      id: Date.now(),
+      username: username,
+      password: password,
+    };
+
+    mutation.mutate(newUser);
+  }
 
   return (
     <>
@@ -212,11 +215,13 @@ export function LoginSection() {
         <input
           placeholder="username"
           className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
+          ref={usernameInputRef}
         ></input>
         <input
           type="password"
           placeholder="password"
           className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
+          ref={passwordInputRef}
         ></input>
         <button onClick={handleLogin} className="mb-2 w-32 h-8">
           Login/Register
@@ -228,4 +233,3 @@ export function LoginSection() {
     </>
   );
 }
-
