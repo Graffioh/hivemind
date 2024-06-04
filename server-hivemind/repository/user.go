@@ -40,12 +40,26 @@ func (u *UserRepository) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-func (u *UserRepository) GetUser(user_id int64) (*models.User, error) {
+func (u *UserRepository) GetUserById(user_id int64) (*models.User, error) {
 	db := config.GetDB()
 
 	var user models.User
 
 	err := db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", user_id).Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		log.Printf("Error querying user: %v", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (u *UserRepository) GetUserByUsernameAndPassword(username string, password string) (*models.User, error) {
+	db := config.GetDB()
+
+	var user models.User
+
+	err := db.QueryRow("SELECT id, username, password FROM users WHERE username = $1 AND password = $2", username, password).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		log.Printf("Error querying user: %v", err)
 		return nil, err
@@ -108,4 +122,28 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 	}
 
 	return &user, session.Token, session.ExpiresAt, nil
+}
+
+func (u *UserRepository) LoginUser(user_id int64) (string, int, error) {
+	db := config.GetDB()
+
+	session := &models.Session{
+		Token:     utils.GenerateSessionToken(),
+		ExpiresAt: 30,
+		UserID:    user_id,
+	}
+
+	stmt, err := db.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
+	if err != nil {
+		log.Printf("Error preparing statement: %v", err)
+		return "", 0, err
+	}
+
+	_, err = stmt.Exec(session.Token, session.ExpiresAt, session.UserID)
+	if err != nil {
+		log.Printf("Error executing statement: %v", err)
+		return "", 0, err
+	}
+
+	return session.Token, session.ExpiresAt, nil
 }

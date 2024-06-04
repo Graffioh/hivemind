@@ -33,7 +33,7 @@ func (u *Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.repo.GetUser(s.UserID)
+	user, err := u.repo.GetUserById(s.UserID)
 
 	if err != nil {
 		http.Error(rw, "No user found", http.StatusBadRequest)
@@ -51,16 +51,42 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Username == "" || user.Password == "" {
-		http.Error(rw, "Username and Password are required", http.StatusBadRequest)
+	existing_user, err := u.repo.GetUserByUsernameAndPassword(user.Username, user.Password)
+	if err != nil {
+		// http.Error(rw, "No user found", http.StatusBadRequest)
+		if user.Username == "" || user.Password == "" {
+			http.Error(rw, "Username and Password are required", http.StatusBadRequest)
+			return
+		}
+
+		user.ID = time.Now().Unix()
+
+		createdUser, token, token_exp, err := u.repo.CreateUser(user)
+		if err != nil {
+			http.Error(rw, "Error creating user", http.StatusInternalServerError)
+			return
+		}
+
+		cookie := &http.Cookie{
+			Name:     "session_id",
+			Value:    token,
+			HttpOnly: true,
+			Secure:   false, // Set to true if using HTTPS
+			MaxAge:   token_exp * 24 * 60 * 60,
+			SameSite: http.SameSiteLaxMode,
+			Path:     "/",
+		}
+		http.SetCookie(rw, cookie)
+
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusCreated)
+		utils.ToJSON(rw, createdUser)
 		return
 	}
 
-	user.ID = time.Now().Unix()
-
-	createdUser, token, token_exp, err := u.repo.CreateUser(user)
+	token, token_exp, err := u.repo.LoginUser(existing_user.ID)
 	if err != nil {
-		http.Error(rw, "Error creating user", http.StatusInternalServerError)
+		http.Error(rw, "Login failed", http.StatusBadRequest)
 		return
 	}
 
@@ -77,5 +103,5 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	utils.ToJSON(rw, createdUser)
+	utils.ToJSON(rw, existing_user)
 }
