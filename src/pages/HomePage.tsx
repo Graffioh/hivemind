@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-svgr/client" />
+
 import { useRef, useEffect, useState } from "react";
 import {
   useInfiniteQuery,
@@ -12,6 +14,7 @@ import { Post, User } from "../types";
 import { fetchPostsPaginated, createPost } from "../api/post";
 import { fetchUserFromSession, createUser } from "../api/user";
 import VoteArrows from "../components/VoteArrows";
+import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
 
 export default function HomePage() {
   const queryClient = useQueryClient();
@@ -24,10 +27,19 @@ export default function HomePage() {
   return (
     <>
       <div className="flex flex-col justify-center items-center">
-        <div className="text-3xl font-bold mt-4">Hivemind</div>
+        <div className="mt-4">
+          <HivemindSVG />
+        </div>
         <div className="flex flex-col w-full">
           {currentUser ? (
-           <PostForm queryClient={queryClient} />
+            <>
+              <div className="flex justify-center text-2xl mt-3 mb-8 font-bold">
+                Welcome{" "}
+                <p className="text-stone-400 pl-2">{currentUser.username}</p>,
+                start posting and enter the hive!
+              </div>
+              <PostForm queryClient={queryClient} />
+            </>
           ) : (
             <LoginSection queryClient={queryClient} />
           )}
@@ -128,7 +140,7 @@ function ThoughtsBoard() {
   }
 
   return (
-    <div className="flex flex-col mx-20 rounded items-center mt-4">
+    <div className="flex flex-col rounded items-center mt-4 mx-10">
       <p className="font-bold text-white text-2xl">Thoughts Board</p>
       {data ? (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,7 +168,7 @@ export function PostSection({ post }: { post: Post }) {
 
   return (
     <>
-      <div className="flex flex-col text-left mx-4 w-full">
+      <div className="flex flex-col text-left">
         <div className="border-b-2 border-stone-600 mx-4 py-3">
           <button
             id="button-post"
@@ -187,7 +199,7 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
   const mutation = useMutation<User, Error, User>({
     mutationFn: createUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users", "current_user"] });
     },
   });
 
