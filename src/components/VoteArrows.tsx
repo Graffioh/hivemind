@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Reaction, Votes } from "../types";
+import { Reaction, Votes, User } from "../types";
 import { fetchReactions, createReaction } from "../api/reaction";
+import { fetchUserFromSession } from "../api/user";
 
 export default function VoteArrows({
   vertical,
@@ -12,6 +13,11 @@ export default function VoteArrows({
   commentId: number | null;
 }) {
   const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["current_user"],
+    queryFn: () => fetchUserFromSession(),
+  });
 
   const { data: votes, error } = useQuery<Votes, Error>({
     queryKey: ["reactions", { postId, commentId }],
@@ -29,10 +35,14 @@ export default function VoteArrows({
   });
 
   async function handleVote(reaction: number) {
+    if (!currentUser) {
+      return;
+    }
+
     const postOrComment: string = postId ? "post" : "comment";
     const newReaction: Reaction = {
       id: Date.now(),
-      user_id: 1,
+      user_id: currentUser!.id,
       post_id: postId,
       comment_id: commentId,
       reaction_type: postOrComment,

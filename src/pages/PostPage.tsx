@@ -11,6 +11,11 @@ export default function PostPage() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("post_id");
 
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["current_user"],
+    queryFn: () => fetchUserFromSession(),
+  });
+
   const { data: post, error: postError } = useQuery<Post>({
     queryKey: ["post", postId],
     queryFn: () => fetchPost(postId!),
@@ -31,7 +36,11 @@ export default function PostPage() {
         {post ? (
           <>
             <TopSection post={post} />
-            <CommentForm postId={postId!} />
+            {currentUser ? (
+              <CommentForm postId={postId!} currentUserId={currentUser.id} />
+            ) : (
+              <div className="m-3 text-xl">You need to login in order to comment.</div>
+            )}
             <CommentsList comments={comments} />
           </>
         ) : (
@@ -42,17 +51,18 @@ export default function PostPage() {
   );
 }
 
-function CommentForm({ postId }: { postId: string }) {
+function CommentForm({
+  postId,
+  currentUserId,
+}: {
+  postId: string;
+  currentUserId: number;
+}) {
   const [isCommentValid, setIsCommentValid] = useState(false);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const queryClient = useQueryClient();
-
-  const { data: currentUser } = useQuery<User>({
-    queryKey: ["current_user"],
-    queryFn: () => fetchUserFromSession(),
-  });
 
   const mutation = useMutation<Comment, Error, Comment>({
     mutationFn: createComment,
@@ -73,7 +83,7 @@ function CommentForm({ postId }: { postId: string }) {
       const newComment: Comment = {
         id: Date.now(),
         post_id: Number(postId),
-        user_id: currentUser!.id, // be careful with !
+        user_id: currentUserId,
         content: content,
         created_at: new Date(),
       };
