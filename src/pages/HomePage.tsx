@@ -35,8 +35,10 @@ export default function HomePage() {
             <>
               <div className="flex justify-center text-2xl mt-3 mb-8 font-bold">
                 Welcome{" "}
-                <p className="text-stone-400 pl-2">{currentUser.username}</p>,
-                start posting and enter the hive!
+                <span className="text-stone-400 pl-2">
+                  {currentUser.username}
+                </span>
+                , start posting and enter the hive!
               </div>
               <PostForm queryClient={queryClient} />
             </>
