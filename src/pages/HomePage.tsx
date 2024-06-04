@@ -199,7 +199,7 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
   const mutation = useMutation<User, Error, User>({
     mutationFn: createUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users", "current_user"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 
@@ -218,7 +218,11 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
       password: password,
     };
 
-    mutation.mutate(newUser);
+    mutation.mutate(newUser, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["current_user"] });
+      },
+    });
   }
 
   return (
