@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import VoteArrows from "../components/VoteArrows";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Post, Comment, User } from "../types";
 import { fetchPost } from "../api/post";
 import { fetchComments, createComment } from "../api/comment";
@@ -10,20 +10,6 @@ import { fetchUserFromSession, fetchUserFromId } from "../api/user";
 export default function PostPage() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("post_id");
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation<Comment, Error, Comment>({
-    mutationFn: createComment,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments"] });
-    },
-  });
-
-  const { data: currentUser } = useQuery<User>({
-    queryKey: ["current_user"],
-    queryFn: () => fetchUserFromSession(),
-  });
 
   const { data: post, error: postError } = useQuery<Post>({
     queryKey: ["post", postId],
@@ -37,6 +23,47 @@ export default function PostPage() {
 
   if (postError || commentsError) {
     return <span>Error: {postError?.message || commentsError?.message}</span>;
+  }
+
+  return (
+    <>
+      <div className="flex flex-col">
+        {post ? (
+          <>
+            <TopSection post={post} />
+            <CommentForm postId={postId!} />
+            <CommentsList comments={comments} />
+          </>
+        ) : (
+          <div>Loading...</div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function CommentForm({ postId }: { postId: string }) {
+  const [isCommentValid, setIsCommentValid] = useState(false);
+
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["current_user"],
+    queryFn: () => fetchUserFromSession(),
+  });
+
+  const mutation = useMutation<Comment, Error, Comment>({
+    mutationFn: createComment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments"] });
+    },
+  });
+
+  function handleIsCommentValid() {
+    const content = textAreaRef.current?.value || "";
+    setIsCommentValid(content !== "");
   }
 
   function handleCommentCreation() {
@@ -54,35 +81,10 @@ export default function PostPage() {
       mutation.mutate(newComment);
 
       textAreaRef.current.value = "";
+      setIsCommentValid(false);
     }
   }
 
-  return (
-    <>
-      <div className="flex flex-col">
-        {post ? (
-          <>
-            <TopSection post={post} />
-            <CommentForm
-              handleCommentCreation={handleCommentCreation}
-              textAreaRef={textAreaRef}
-            />
-            <CommentsList comments={comments} />
-          </>
-        ) : (
-          <div>Loading...</div>
-        )}
-      </div>
-    </>
-  );
-}
-
-interface CommentFormProps {
-  handleCommentCreation: () => void;
-  textAreaRef: React.RefObject<HTMLTextAreaElement>;
-}
-
-function CommentForm({ handleCommentCreation, textAreaRef }: CommentFormProps) {
   return (
     <div className="pl-4 flex flex-col">
       <textarea
@@ -90,8 +92,14 @@ function CommentForm({ handleCommentCreation, textAreaRef }: CommentFormProps) {
         rows={3}
         cols={60}
         className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
+        required
+        onChange={handleIsCommentValid}
       ></textarea>
-      <button className="my-3 w-20 h-8" onClick={handleCommentCreation}>
+      <button
+        className="my-3 w-20 h-8 disabled:bg-stone-800"
+        onClick={handleCommentCreation}
+        disabled={!isCommentValid}
+      >
         comment
       </button>
     </div>
@@ -100,7 +108,7 @@ function CommentForm({ handleCommentCreation, textAreaRef }: CommentFormProps) {
 
 function TopSection({ post }: { post: Post }) {
   const { data: userByPost } = useQuery<User>({
-    queryKey: ["user_post"],
+    queryKey: ["user_post_section"],
     queryFn: () => fetchUserFromId(post!.user_id), // be careful with !
   });
 
@@ -135,7 +143,7 @@ function CommentsList({ comments }: { comments: Comment[] }) {
 
 export function CommentSection({ comment }: { comment: Comment }) {
   const { data: userByComment } = useQuery<User>({
-    queryKey: ["user_post"],
+    queryKey: ["user_comment", comment.user_id],
     queryFn: () => fetchUserFromId(comment!.user_id), // be careful with !
   });
 

@@ -175,7 +175,7 @@ export function PostSection({ post }: { post: Post }) {
   }
 
   const { data: userByPost } = useQuery<User>({
-    queryKey: ["user_post"],
+    queryKey: ["user_post", post.user_id],
     queryFn: () => fetchUserFromId(post.user_id),
   });
 
