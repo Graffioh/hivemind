@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { Post, User } from "../types";
 import { fetchPostsPaginated, createPost } from "../api/post";
-import { fetchUserFromSession, createUser } from "../api/user";
+import { fetchUserFromSession, fetchUserFromId, createUser } from "../api/user";
 import VoteArrows from "../components/VoteArrows";
 import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
 
@@ -40,7 +40,7 @@ export default function HomePage() {
                 </span>
                 , start posting and enter the hive!
               </div>
-              <PostForm queryClient={queryClient} />
+              <PostForm queryClient={queryClient} currentUser={currentUser} />
             </>
           ) : (
             <LoginSection queryClient={queryClient} />
@@ -52,7 +52,13 @@ export default function HomePage() {
   );
 }
 
-function PostForm({ queryClient }: { queryClient: QueryClient }) {
+function PostForm({
+  queryClient,
+  currentUser,
+}: {
+  queryClient: QueryClient;
+  currentUser: User;
+}) {
   const [isPostValid, setIsPostValid] = useState(false);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -78,7 +84,7 @@ function PostForm({ queryClient }: { queryClient: QueryClient }) {
 
       const newPost: Post = {
         id: Date.now(),
-        user_id: 1,
+        user_id: currentUser.id,
         title: title,
         content: content,
         created_at: new Date(),
@@ -168,6 +174,11 @@ export function PostSection({ post }: { post: Post }) {
     navigate(`/post-page?post_id=${post.id}`);
   }
 
+  const { data: userByPost } = useQuery<User>({
+    queryKey: ["user_post"],
+    queryFn: () => fetchUserFromId(post.user_id),
+  });
+
   return (
     <>
       <div className="flex flex-col text-left">
@@ -177,7 +188,10 @@ export function PostSection({ post }: { post: Post }) {
             className="w-full py-2 px-1"
             onClick={goToPostPage}
           >
-            <div className="text-stone-400 flex"> &lt; username &gt;</div>
+            <div className="text-stone-400 flex">
+              {" "}
+              &lt; {userByPost?.username} &gt;
+            </div>
             <div key={post.id} className="p-1 pb-4 pt-2 max-w-full text-left">
               {post.title}
             </div>

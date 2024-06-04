@@ -2,9 +2,10 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import VoteArrows from "../components/VoteArrows";
 import { useRef } from "react";
-import { Post, Comment } from "../types";
+import { Post, Comment, User } from "../types";
 import { fetchPost } from "../api/post";
 import { fetchComments, createComment } from "../api/comment";
+import { fetchUserFromSession, fetchUserFromId } from "../api/user";
 
 export default function PostPage() {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,11 @@ export default function PostPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments"] });
     },
+  });
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["current_user"],
+    queryFn: () => fetchUserFromSession(),
   });
 
   const { data: post, error: postError } = useQuery<Post>({
@@ -40,7 +46,7 @@ export default function PostPage() {
       const newComment: Comment = {
         id: Date.now(),
         post_id: Number(postId),
-        user_id: 1,
+        user_id: currentUser!.id, // be careful with !
         content: content,
         created_at: new Date(),
       };
@@ -93,11 +99,16 @@ function CommentForm({ handleCommentCreation, textAreaRef }: CommentFormProps) {
 }
 
 function TopSection({ post }: { post: Post }) {
+  const { data: userByPost } = useQuery<User>({
+    queryKey: ["user_post"],
+    queryFn: () => fetchUserFromId(post!.user_id), // be careful with !
+  });
+
   return (
     <div className="flex items-center border-b-2 pl-2">
       <VoteArrows vertical={true} postId={post.id} commentId={null} />
       <div className="flex flex-col pl-3 pb-4 mt-2">
-        <div className="text-stone-400"> &lt; username &gt;</div>
+        <div className="text-stone-400"> &lt; {userByPost?.username} &gt;</div>
         <div className="text-2xl font-bold mb-1">{post.title}</div>
         <div className="flex text-xl">{post.content}</div>
       </div>
@@ -123,10 +134,18 @@ function CommentsList({ comments }: { comments: Comment[] }) {
 }
 
 export function CommentSection({ comment }: { comment: Comment }) {
+  const { data: userByComment } = useQuery<User>({
+    queryKey: ["user_post"],
+    queryFn: () => fetchUserFromId(comment!.user_id), // be careful with !
+  });
+
   return (
     <>
       <div className="mb-4 flex flex-col">
-        <div className="text-stone-400 mt-2"> &lt; username &gt;</div>
+        <div className="text-stone-400 mt-2">
+          {" "}
+          &lt; {userByComment?.username} &gt;
+        </div>
         <div className="bg-neutral-800 rounded w-fit p-2 mb-1">
           {comment.content}
         </div>
@@ -135,4 +154,3 @@ export function CommentSection({ comment }: { comment: Comment }) {
     </>
   );
 }
-

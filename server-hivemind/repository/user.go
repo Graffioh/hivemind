@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"log"
-	"server-hivemind/config"
 	"server-hivemind/models"
 	"server-hivemind/utils"
 )
@@ -17,9 +16,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (u *UserRepository) GetUsers() ([]*models.User, error) {
-	db := config.GetDB()
-
-	rows, err := db.Query("SELECT id, username, password FROM users")
+	rows, err := u.db.Query("SELECT id, username, password FROM users")
 	if err != nil {
 		log.Printf("Error querying users: %v", err)
 		return nil, err
@@ -41,13 +38,11 @@ func (u *UserRepository) GetUsers() ([]*models.User, error) {
 }
 
 func (u *UserRepository) GetUserById(user_id int64) (*models.User, error) {
-	db := config.GetDB()
-
 	var user models.User
 
-	err := db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", user_id).Scan(&user.ID, &user.Username, &user.Password)
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", user_id).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
-		log.Printf("Error querying user: %v", err)
+		log.Printf("Error querying user by id: %v", err)
 		return nil, err
 	}
 
@@ -55,13 +50,23 @@ func (u *UserRepository) GetUserById(user_id int64) (*models.User, error) {
 }
 
 func (u *UserRepository) GetUserByUsernameAndPassword(username string, password string) (*models.User, error) {
-	db := config.GetDB()
-
 	var user models.User
 
-	err := db.QueryRow("SELECT id, username, password FROM users WHERE username = $1 AND password = $2", username, password).Scan(&user.ID, &user.Username, &user.Password)
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE username = $1 AND password = $2", username, password).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
-		log.Printf("Error querying user: %v", err)
+		log.Printf("Error querying user by username and password: %v", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (u *UserRepository) GetUserByPost(user_id int64) (*models.User, error) {
+	var user models.User
+
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", user_id).Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		log.Printf("Error querying user by post user_id: %v", err)
 		return nil, err
 	}
 
@@ -69,9 +74,7 @@ func (u *UserRepository) GetUserByUsernameAndPassword(username string, password 
 }
 
 func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int, error) {
-	db := config.GetDB()
-
-	tx, err := db.Begin()
+	tx, err := u.db.Begin()
 	if err != nil {
 		log.Printf("Error beginning transaction: %v", err)
 		return nil, "", 0, err
@@ -125,15 +128,13 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 }
 
 func (u *UserRepository) LoginUser(user_id int64) (string, int, error) {
-	db := config.GetDB()
-
 	session := &models.Session{
 		Token:     utils.GenerateSessionToken(),
 		ExpiresAt: 30,
 		UserID:    user_id,
 	}
 
-	stmt, err := db.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
+	stmt, err := u.db.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return "", 0, err

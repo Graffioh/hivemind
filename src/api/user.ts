@@ -26,3 +26,11 @@ export async function fetchUserFromSession(): Promise<User> {
 
     return response.json();
 }
+
+export async function fetchUserFromId(userId: number) {
+    const response = await fetch("http://localhost:8080/user/" + userId);
+    if (!response.ok) {
+        throw new Error("Network response was not ok");
+    }
+    return response.json();
+}

@@ -59,8 +59,9 @@ func run() error {
 	// ROUTES
 	//
 	// Users
-	router.HandleFunc("/user/current", uh.GetUser).Methods("GET")
-	router.HandleFunc("/user", uh.CreateUser).Methods("POST")
+	router.HandleFunc("/user/current", uh.GetCurrentUser).Methods("GET")
+	router.HandleFunc("/user/{id:[0-9]+}", uh.GetUserById).Methods("GET")
+	router.HandleFunc("/user", uh.CreateOrLoginUser).Methods("POST")
 	//
 	// Posts
 	router.HandleFunc("/post", ph.GetPosts).Methods("GET")

@@ -6,7 +6,10 @@ import (
 	"server-hivemind/models"
 	"server-hivemind/repository"
 	"server-hivemind/utils"
+	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type Users struct {
@@ -17,7 +20,7 @@ func NewUsers(repo *repository.UserRepository) *Users {
 	return &Users{repo: repo}
 }
 
-func (u *Users) GetUser(rw http.ResponseWriter, r *http.Request) {
+func (u *Users) GetCurrentUser(rw http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		http.Error(rw, "Session not found in cookies", http.StatusBadRequest)
@@ -44,7 +47,32 @@ func (u *Users) GetUser(rw http.ResponseWriter, r *http.Request) {
 	utils.ToJSON(rw, user)
 }
 
-func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
+func (u *Users) GetUserById(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user_id_str, ok := vars["id"]
+	if !ok {
+		http.Error(rw, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	user_id, err := strconv.ParseInt(user_id_str, 10, 64)
+	if err != nil {
+		http.Error(rw, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	user, err := u.repo.GetUserById(user_id)
+
+	if err != nil {
+		http.Error(rw, "No user found", http.StatusBadRequest)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	utils.ToJSON(rw, user)
+}
+
+func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(rw, "Invalid input", http.StatusBadRequest)
@@ -53,6 +81,8 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 
 	existing_user, err := u.repo.GetUserByUsernameAndPassword(user.Username, user.Password)
 	if err != nil {
+		// REGISTRATION
+		//
 		// http.Error(rw, "No user found", http.StatusBadRequest)
 		if user.Username == "" || user.Password == "" {
 			http.Error(rw, "Username and Password are required", http.StatusBadRequest)
@@ -84,6 +114,8 @@ func (u *Users) CreateUser(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// LOGIN
+	//
 	token, token_exp, err := u.repo.LoginUser(existing_user.ID)
 	if err != nil {
 		http.Error(rw, "Login failed", http.StatusBadRequest)
