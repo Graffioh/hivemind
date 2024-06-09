@@ -116,7 +116,7 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 
 	// LOGIN
 	//
-	token, token_exp, err := u.repo.LoginUser(existing_user.ID)
+	token, token_exp, err := u.repo.CreateLoginSession(existing_user.ID)
 	if err != nil {
 		http.Error(rw, "Login failed", http.StatusBadRequest)
 		return

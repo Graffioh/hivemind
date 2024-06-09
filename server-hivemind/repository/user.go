@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"server-hivemind/models"
 	"server-hivemind/utils"
@@ -52,10 +53,19 @@ func (u *UserRepository) GetUserById(user_id int64) (*models.User, error) {
 func (u *UserRepository) GetUserByUsernameAndPassword(username string, password string) (*models.User, error) {
 	var user models.User
 
-	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE username = $1 AND password = $2", username, password).Scan(&user.ID, &user.Username, &user.Password)
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE username = $1", username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		log.Printf("Error querying user by username and password: %v", err)
 		return nil, err
+	}
+
+	check, err := utils.CheckPasswords(password, user.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	if !check {
+		return nil, fmt.Errorf("password hash comparison failed: %v", err)
 	}
 
 	return &user, nil
@@ -81,12 +91,11 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 	}
 	defer tx.Rollback()
 
-	// Hash the user's password before storing it
-	// hashedPassword, err := HashPassword(user.Password)
-	// if err != nil {
-	//     log.Printf("Error hashing password: %v", err)
-	//     return nil, err
-	// }
+	encoded_hash_pw, err := utils.HashPassword(user.Password)
+	if err != nil {
+		log.Printf("Error hashing password: %v", err)
+		return nil, "", 0, err
+	}
 
 	stmt, err := tx.Prepare("INSERT INTO users(id, username, password) VALUES($1, $2, $3) RETURNING id")
 	if err != nil {
@@ -95,7 +104,7 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(user.ID, user.Username, user.Password).Scan(&user.ID)
+	err = stmt.QueryRow(user.ID, user.Username, encoded_hash_pw).Scan(&user.ID)
 	if err != nil {
 		log.Printf("Error executing statement: %v", err)
 		return nil, "", 0, err
@@ -127,7 +136,7 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 	return &user, session.Token, session.ExpiresAt, nil
 }
 
-func (u *UserRepository) LoginUser(user_id int64) (string, int, error) {
+func (u *UserRepository) CreateLoginSession(user_id int64) (string, int, error) {
 	session := &models.Session{
 		Token:     utils.GenerateSessionToken(),
 		ExpiresAt: 30,

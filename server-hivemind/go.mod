@@ -8,4 +8,9 @@ require (
 	github.com/lib/pq v1.10.9
 )
 
-require github.com/rs/cors v1.11.0
+require (
+	github.com/rs/cors v1.11.0
+	golang.org/x/crypto v0.24.0
+)
+
+require golang.org/x/sys v0.21.0 // indirect
