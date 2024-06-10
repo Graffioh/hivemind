@@ -93,7 +93,11 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 
 		createdUser, token, token_exp, err := u.repo.CreateUser(user)
 		if err != nil {
-			http.Error(rw, "Error creating user", http.StatusInternalServerError)
+			if err.Error() == "username already in use" {
+				http.Error(rw, "Username already in use", http.StatusConflict)
+			} else {
+				http.Error(rw, "Error creating user", http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -109,7 +113,6 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 		http.SetCookie(rw, cookie)
 
 		rw.Header().Set("Content-Type", "application/json")
-		rw.WriteHeader(http.StatusCreated)
 		utils.ToJSON(rw, createdUser)
 		return
 	}
@@ -134,6 +137,5 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, cookie)
 
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusCreated)
 	utils.ToJSON(rw, existing_user)
 }

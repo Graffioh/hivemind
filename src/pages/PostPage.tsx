@@ -160,7 +160,7 @@ export function CommentSection({ comment }: { comment: Comment }) {
   return (
     <>
       <div className="mb-4 flex flex-col">
-        <div className="text-stone-400 mt-2">
+        <div className="text-stone-400 mb-2">
           {" "}
           &lt; {userByComment?.username} &gt;
         </div>

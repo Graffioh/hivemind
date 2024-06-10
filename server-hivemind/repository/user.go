@@ -2,10 +2,13 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"server-hivemind/models"
 	"server-hivemind/utils"
+
+	"github.com/lib/pq"
 )
 
 type UserRepository struct {
@@ -55,7 +58,7 @@ func (u *UserRepository) GetUserByUsernameAndPassword(username string, password 
 
 	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE username = $1", username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
-		log.Printf("Error querying user by username and password: %v", err)
+		log.Printf("Error querying, user does not exist: %v", err)
 		return nil, err
 	}
 
@@ -106,6 +109,11 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 
 	err = stmt.QueryRow(user.ID, user.Username, encoded_hash_pw).Scan(&user.ID)
 	if err != nil {
+		if pg_err, ok := err.(*pq.Error); ok {
+			if pg_err.Code == "23505" {
+				return nil, "", 0, errors.New("username already in use")
+			}
+		}
 		log.Printf("Error executing statement: %v", err)
 		return nil, "", 0, err
 	}

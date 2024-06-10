@@ -233,7 +233,7 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
       username: username,
       password: password,
     };
-
+    
     mutation.mutate(newUser, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["current_user"] });

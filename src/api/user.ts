@@ -8,6 +8,10 @@ export async function createUser(newUser: User): Promise<User> {
     });
 
     if (!response.ok) {
+        if(response.statusText === "Conflict") {
+            alert("Username already in use!")           
+        }
+
         throw new Error("Failed to create the user");
     }
 
