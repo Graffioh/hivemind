@@ -39,8 +39,8 @@ export async function fetchUserFromId(userId: number) {
     return response.json();
 }
 
-export async function logout() {
-    const response = await fetch("http://localhost:8080/user/logout", {
+export async function logout(userId: number) {
+    const response = await fetch("http://localhost:8080/user/logout/" + userId, {
         method: 'GET',
         credentials: 'include' 
     });

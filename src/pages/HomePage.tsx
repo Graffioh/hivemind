@@ -41,7 +41,7 @@ export default function HomePage() {
                 </span>
                 , start posting and enter the hive!
               </div>
-              <button onClick={logout} className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit">log out</button>
+              <button onClick={() => logout(currentUser.id)} className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit">log out</button>
               </div>
               <PostForm queryClient={queryClient} currentUser={currentUser} />
             </>

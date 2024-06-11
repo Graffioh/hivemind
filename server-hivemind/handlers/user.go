@@ -141,6 +141,21 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *Users) DeleteSession(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user_id_str, ok := vars["id"]
+	if !ok {
+		http.Error(rw, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	user_id, err := strconv.ParseInt(user_id_str, 10, 64)
+	if err != nil {
+		http.Error(rw, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	u.repo.DeleteSession(user_id)
+
 	name := "session_id"
 
 	exp_cookie := http.Cookie{
