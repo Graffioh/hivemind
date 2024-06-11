@@ -58,7 +58,7 @@ function CommentForm({
   postId: string;
   currentUserId: number;
 }) {
-  const [isCommentValid, setIsCommentValid] = useState(false);
+  const [isCommentActive, setIsCommentActive] = useState(false);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -71,9 +71,9 @@ function CommentForm({
     },
   });
 
-  function handleIsCommentValid() {
+  function handleIsCommentActive() {
     const content = textAreaRef.current?.value || "";
-    setIsCommentValid(content !== "");
+    setIsCommentActive(content !== "");
   }
 
   function handleCommentCreation() {
@@ -91,7 +91,7 @@ function CommentForm({
       mutation.mutate(newComment);
 
       textAreaRef.current.value = "";
-      setIsCommentValid(false);
+      setIsCommentActive(false);
     }
   }
 
@@ -103,12 +103,12 @@ function CommentForm({
         cols={60}
         className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
         required
-        onChange={handleIsCommentValid}
+        onChange={handleIsCommentActive}
       ></textarea>
       <button
         className="my-3 w-20 h-8 disabled:bg-stone-800"
         onClick={handleCommentCreation}
-        disabled={!isCommentValid}
+        disabled={!isCommentActive}
       >
         comment
       </button>

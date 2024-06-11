@@ -12,7 +12,12 @@ import { useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { Post, User } from "../types";
 import { fetchPostsPaginated, createPost } from "../api/post";
-import { fetchUserFromSession, fetchUserFromId, createUser, logout } from "../api/user";
+import {
+  fetchUserFromSession,
+  fetchUserFromId,
+  createUser,
+  logout,
+} from "../api/user";
 import VoteArrows from "../components/VoteArrows";
 import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
 
@@ -34,14 +39,19 @@ export default function HomePage() {
           {currentUser ? (
             <>
               <div className="flex flex-col justify-center items-center mb-8">
-              <div className="flex text-2xl mt-3 font-bold">
-                Welcome{" "}
-                <span className="text-stone-400 pl-2">
-                  {currentUser.username}
-                </span>
-                , start posting and enter the hive!
-              </div>
-              <button onClick={() => logout(currentUser.id)} className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit">log out</button>
+                <div className="flex text-2xl mt-3 font-bold">
+                  Welcome{" "}
+                  <span className="text-stone-400 pl-2">
+                    {currentUser.username}
+                  </span>
+                  , start posting and enter the hive!
+                </div>
+                <button
+                  onClick={() => logout(currentUser.id)}
+                  className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit"
+                >
+                  log out
+                </button>
               </div>
               <PostForm queryClient={queryClient} currentUser={currentUser} />
             </>
@@ -62,7 +72,7 @@ function PostForm({
   queryClient: QueryClient;
   currentUser: User;
 }) {
-  const [isPostValid, setIsPostValid] = useState(false);
+  const [isPostActive, setIsPostActive] = useState(false);
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -74,16 +84,29 @@ function PostForm({
     },
   });
 
-  function handleIsPostValid() {
+  function handleIsPostActive() {
     const title = titleInputRef.current?.value || "";
     const content = textAreaRef.current?.value || "";
-    setIsPostValid(title !== "" && content !== "");
+    setIsPostActive(title !== "" && content !== "");
   }
 
   function handlePost() {
     if (textAreaRef.current && titleInputRef.current) {
       const title = titleInputRef.current.value;
       const content = textAreaRef.current.value;
+
+      const titleRegex = /^.{3,100}$/;
+      const contentRegex = /^.{10,1000}$/;
+
+      if (!titleRegex.test(title)) {
+        alert("Title must be 3-100 characters long.");
+        return;
+      }
+
+      if (!contentRegex.test(content)) {
+        alert("Content must be 10-1000 characters long.");
+        return;
+      }
 
       const newPost: Post = {
         id: Date.now(),
@@ -97,7 +120,7 @@ function PostForm({
 
       titleInputRef.current.value = "";
       textAreaRef.current.value = "";
-      setIsPostValid(false);
+      setIsPostActive(false);
     }
   }
 
@@ -108,7 +131,7 @@ function PostForm({
         className="w-64 p-1 rounded border-x-2 border-t-2 border-neutral-600"
         placeholder="Title"
         required
-        onChange={handleIsPostValid}
+        onChange={handleIsPostActive}
       />
       <textarea
         ref={textAreaRef}
@@ -117,12 +140,12 @@ function PostForm({
         className="p-1 rounded border-2 border-neutral-600"
         placeholder="Write your thoughts..."
         required
-        onChange={handleIsPostValid}
+        onChange={handleIsPostActive}
       />
       <button
         onClick={handlePost}
         className="m-4 w-24 h-12 disabled:bg-stone-800 font-bold"
-        disabled={!isPostValid}
+        disabled={!isPostActive}
       >
         Post
       </button>
@@ -231,12 +254,29 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
       return;
     }
 
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const passwordRegex = /^\S{10,30}$/;
+
+    // q allowed only for testing!!!!!!!!!!!!
+    if (!usernameRegex.test(username) && username != "q") {
+      alert(
+        "Username must be 3-20 characters long and can only contain letters, numbers, and underscores"
+      );
+      return;
+    }
+
+    // q allowed only for testing!!!!!!!!!!!!
+    if (!passwordRegex.test(password) && password != "q") {
+      alert("Password must be 10-30 characters long and cannot contain spaces");
+      return;
+    }
+
     const newUser: User = {
       id: Date.now(),
       username: username,
       password: password,
     };
-    
+
     mutation.mutate(newUser, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["current_user"] });
@@ -251,12 +291,15 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
           placeholder="username"
           className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
           ref={usernameInputRef}
+          required
         ></input>
         <input
           type="password"
           placeholder="password"
           className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
           ref={passwordInputRef}
+          required
+          pattern="/^\S{10,30}$/m"
         ></input>
         <button onClick={handleLogin} className="mb-2 w-32 h-8">
           Login/Register

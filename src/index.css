@@ -27,12 +27,16 @@ button {
   transition: border-color 0.25s;
 }
 
+input:focus {
+  outline: 4px auto white;
+}
+
+textarea:focus {
+  outline: 4px auto white;
+}
+
 button:hover {
   background-color: #595959;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
 #button-post {
