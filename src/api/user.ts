@@ -8,8 +8,8 @@ export async function createUser(newUser: User): Promise<User> {
     });
 
     if (!response.ok) {
-        if(response.statusText === "Conflict") {
-            alert("Username already in use!")           
+        if (response.statusText === "Conflict") {
+            alert("Username already in use!")
         }
 
         throw new Error("Failed to create the user");
@@ -37,4 +37,15 @@ export async function fetchUserFromId(userId: number) {
         throw new Error("Network response was not ok");
     }
     return response.json();
+}
+
+export async function logout() {
+    const response = await fetch("http://localhost:8080/user/logout", {
+        method: 'GET',
+        credentials: 'include' 
+    });
+    if (!response.ok) {
+        throw new Error("Network response was not ok");
+    }
+    return response.text();
 }

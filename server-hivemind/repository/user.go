@@ -165,3 +165,25 @@ func (u *UserRepository) CreateLoginSession(user_id int64) (string, int, error) 
 
 	return session.Token, session.ExpiresAt, nil
 }
+
+// func (u *UserRepository) DeleteSession(user_id int64) (string, int, error) {
+// 	session := &models.Session{
+// 		Token:     utils.GenerateSessionToken(),
+// 		ExpiresAt: 30,
+// 		UserID:    user_id,
+// 	}
+
+// 	stmt, err := u.db.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
+// 	if err != nil {
+// 		log.Printf("Error preparing statement: %v", err)
+// 		return "", 0, err
+// 	}
+
+// 	_, err = stmt.Exec(session.Token, session.ExpiresAt, session.UserID)
+// 	if err != nil {
+// 		log.Printf("Error executing statement: %v", err)
+// 		return "", 0, err
+// 	}
+
+// 	return session.Token, session.ExpiresAt, nil
+// }

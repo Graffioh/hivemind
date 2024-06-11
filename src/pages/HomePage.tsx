@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { Post, User } from "../types";
 import { fetchPostsPaginated, createPost } from "../api/post";
-import { fetchUserFromSession, fetchUserFromId, createUser } from "../api/user";
+import { fetchUserFromSession, fetchUserFromId, createUser, logout } from "../api/user";
 import VoteArrows from "../components/VoteArrows";
 import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
 
@@ -33,12 +33,15 @@ export default function HomePage() {
         <div className="flex flex-col w-full">
           {currentUser ? (
             <>
-              <div className="flex justify-center text-2xl mt-3 mb-8 font-bold">
+              <div className="flex flex-col justify-center items-center mb-8">
+              <div className="flex text-2xl mt-3 font-bold">
                 Welcome{" "}
                 <span className="text-stone-400 pl-2">
                   {currentUser.username}
                 </span>
                 , start posting and enter the hive!
+              </div>
+              <button onClick={logout} className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit">log out</button>
               </div>
               <PostForm queryClient={queryClient} currentUser={currentUser} />
             </>

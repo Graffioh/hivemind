@@ -139,3 +139,22 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	utils.ToJSON(rw, existing_user)
 }
+
+func (u *Users) DeleteSession(rw http.ResponseWriter, r *http.Request) {
+	name := "session_id"
+
+	exp_cookie := http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	http.SetCookie(rw, &exp_cookie)
+
+	rw.Write([]byte("Session cookie deleted"))
+}
