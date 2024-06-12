@@ -36,6 +36,7 @@ export default function VoteArrows({
 
   async function handleVote(reaction: number) {
     if (!currentUser) {
+      alert("You must login in order to vote!")
       return;
     }
 

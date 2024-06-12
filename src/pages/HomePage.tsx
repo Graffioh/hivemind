@@ -20,6 +20,7 @@ import {
 } from "../api/user";
 import VoteArrows from "../components/VoteArrows";
 import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function HomePage() {
   const queryClient = useQueryClient();
@@ -56,7 +57,7 @@ export default function HomePage() {
               <PostForm queryClient={queryClient} currentUser={currentUser} />
             </>
           ) : (
-            <LoginSection queryClient={queryClient} />
+            <LoginForm queryClient={queryClient} />
           )}
           <ThoughtsBoard />
         </div>
@@ -186,7 +187,7 @@ function ThoughtsBoard() {
           </div>
         ))
       ) : (
-        <div>...</div>
+        <LoadingSpinner />
       )}
       <div ref={ref}>{isFetchingNextPage && "Loading..."}</div>
     </div>
@@ -234,7 +235,7 @@ export function PostSection({ post }: { post: Post }) {
   );
 }
 
-export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
+export function LoginForm({ queryClient }: { queryClient: QueryClient }) {
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
@@ -282,6 +283,10 @@ export function LoginSection({ queryClient }: { queryClient: QueryClient }) {
         queryClient.invalidateQueries({ queryKey: ["current_user"] });
       },
     });
+  }
+
+  if (mutation.isPending || mutation.isSuccess) {
+    return <LoadingSpinner />;
   }
 
   return (

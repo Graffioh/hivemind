@@ -6,6 +6,7 @@ import { Post, Comment, User } from "../types";
 import { fetchPost } from "../api/post";
 import { fetchComments, createComment } from "../api/comment";
 import { fetchUserFromSession, fetchUserFromId } from "../api/user";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function PostPage() {
   const [searchParams] = useSearchParams();
@@ -39,12 +40,14 @@ export default function PostPage() {
             {currentUser ? (
               <CommentForm postId={postId!} currentUserId={currentUser.id} />
             ) : (
-              <div className="m-3 text-xl">You need to login in order to comment.</div>
+              <div className="m-3 text-xl">
+                You need to login in order to comment.
+              </div>
             )}
             <CommentsList comments={comments} />
           </>
         ) : (
-          <div>Loading...</div>
+          <LoadingSpinner />
         )}
       </div>
     </>
