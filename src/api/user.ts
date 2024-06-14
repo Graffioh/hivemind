@@ -39,7 +39,7 @@ export async function fetchUserFromId(userId: number) {
     return response.json();
 }
 
-export async function logout(userId: number) {
+export async function logout(userId: number, onLogout: () => void) {
     const response = await fetch("http://localhost:8080/user/logout/" + userId, {
         method: 'GET',
         credentials: 'include' 
@@ -47,5 +47,8 @@ export async function logout(userId: number) {
     if (!response.ok) {
         throw new Error("Network response was not ok");
     }
+    
+    onLogout();
+
     return response.text();
 }

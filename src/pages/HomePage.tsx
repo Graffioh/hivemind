@@ -24,11 +24,29 @@ import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function HomePage() {
   const queryClient = useQueryClient();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  const { data: currentUser } = useQuery<User>({
+  const {
+    data: currentUser,
+    isLoading,
+    isError,
+  } = useQuery<User>({
     queryKey: ["current_user"],
     queryFn: () => fetchUserFromSession(),
   });
+
+  function handleLogout(currentUserId: number) {
+    logout(currentUserId, () => {
+      queryClient.invalidateQueries({ queryKey: ["current_user"] });
+      setIsLoggedIn(false);
+    });
+  }
+
+  useEffect(() => {
+    if (!isLoading && !isError) {
+      setIsLoggedIn(currentUser !== null);
+    }
+  }, [currentUser, isLoading, isError]);
 
   return (
     <>
@@ -37,24 +55,24 @@ export default function HomePage() {
           <HivemindSVG />
         </div>
         <div className="flex flex-col w-full">
-          {currentUser ? (
+          {isLoggedIn ? (
             <>
               <div className="flex flex-col justify-center items-center mb-8">
                 <div className="flex text-2xl mt-3 font-bold">
                   Welcome{" "}
                   <span className="text-stone-400 pl-2">
-                    {currentUser.username}
+                    {currentUser!.username}
                   </span>
                   , start posting and enter the hive!
                 </div>
                 <button
-                  onClick={() => logout(currentUser.id)}
+                  onClick={() => handleLogout(currentUser!.id)}
                   className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit"
                 >
                   log out
                 </button>
               </div>
-              <PostForm queryClient={queryClient} currentUser={currentUser} />
+              <PostForm queryClient={queryClient} currentUser={currentUser!} />
             </>
           ) : (
             <LoginForm queryClient={queryClient} />
