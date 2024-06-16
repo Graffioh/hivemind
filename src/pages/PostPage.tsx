@@ -103,17 +103,17 @@ function CommentForm({
       <textarea
         ref={textAreaRef}
         rows={3}
-        cols={60}
-        className="w-fit p-1 mt-6 rounded border-2 border-neutral-600"
+        className="md:w-2/6 p-1 mt-6 rounded border-2 border-neutral-600 mr-4"
         required
         onChange={handleIsCommentActive}
+        placeholder="Comment here..."
       ></textarea>
       <button
-        className="my-3 w-20 h-8 disabled:bg-stone-800"
+        className="my-3 w-20 h-8 disabled:bg-stone-800 font-bold"
         onClick={handleCommentCreation}
         disabled={!isCommentActive}
       >
-        comment
+        Comment
       </button>
     </div>
   );

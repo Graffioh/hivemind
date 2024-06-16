@@ -60,13 +60,14 @@ export default function HomePage() {
         <div className="flex flex-col w-full">
           {isLoggedIn ? (
             <>
-              <div className="flex flex-col justify-center items-center mb-8">
-                <div className="flex text-2xl mt-3 font-bold">
-                  Welcome{" "}
-                  <span className="text-stone-400 pl-2">
+              <div className="flex flex-col justify-center items-center mb-8 text-center">
+                <div className="text-xl md:text-2xl mt-3 font-bold text-wrap px-2">
+                  {" "}
+                  Welcome
+                  <span className="pl-2 text-stone-400">
                     {currentUser!.username}
                   </span>
-                  , start posting and enter the hive!
+                  , <br /> Start posting and enter the hive!
                 </div>
                 <button
                   onClick={() => handleLogout(currentUser!.id)}
@@ -157,9 +158,8 @@ function PostForm({
       />
       <textarea
         ref={textAreaRef}
-        rows={10}
-        cols={50}
-        className="p-1 rounded border-2 border-neutral-600"
+        rows={8}
+        className="w-11/12 md:w-2/4 p-1 rounded border-2 border-neutral-600"
         placeholder="Write your thoughts..."
         required
         onChange={handleIsPostActive}
@@ -267,7 +267,7 @@ export function LoginForm({ queryClient }: { queryClient: QueryClient }) {
   function handleLogin() {
     const username = usernameInputRef.current?.value ?? "";
     const password = passwordInputRef.current?.value ?? "";
-    
+
     if (!username || !password) {
       console.error("Username or password is empty");
       return;
