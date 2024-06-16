@@ -38,13 +38,16 @@ export default function HomePage() {
   function handleLogout(currentUserId: number) {
     logout(currentUserId, () => {
       queryClient.invalidateQueries({ queryKey: ["current_user"] });
+      queryClient.removeQueries({ queryKey: ["current_user"] });
       setIsLoggedIn(false);
     });
   }
 
   useEffect(() => {
-    if (!isLoading && !isError) {
-      setIsLoggedIn(currentUser !== null);
+    if (!isLoading && !isError && currentUser) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
     }
   }, [currentUser, isLoading, isError]);
 
@@ -259,15 +262,12 @@ export function LoginForm({ queryClient }: { queryClient: QueryClient }) {
 
   const mutation = useMutation<User, Error, User>({
     mutationFn: createUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
   });
 
   function handleLogin() {
     const username = usernameInputRef.current?.value ?? "";
     const password = passwordInputRef.current?.value ?? "";
-
+    
     if (!username || !password) {
       console.error("Username or password is empty");
       return;
@@ -290,13 +290,13 @@ export function LoginForm({ queryClient }: { queryClient: QueryClient }) {
       return;
     }
 
-    const newUser: User = {
+    const user: User = {
       id: Date.now(),
       username: username,
       password: password,
     };
 
-    mutation.mutate(newUser, {
+    mutation.mutate(user, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["current_user"] });
       },
