@@ -151,7 +151,7 @@ function PostForm({
     <div className="flex flex-col items-center">
       <input
         ref={titleInputRef}
-        className="w-64 p-1 rounded border-x-2 border-t-2 border-neutral-600"
+        className="w-96 p-1 rounded border-2 border-neutral-600 mb-1"
         placeholder="Title"
         required
         onChange={handleIsPostActive}
@@ -176,6 +176,8 @@ function PostForm({
 }
 
 function ThoughtsBoard() {
+  const [isControversial, setIsControversial] = useState<boolean>(true);
+
   const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["posts"],
     queryFn: fetchPostsPaginated,
@@ -191,6 +193,10 @@ function ThoughtsBoard() {
     }
   }, [fetchNextPage, inView]);
 
+  function handleIsControversial(isControversial: boolean) {
+    setIsControversial(isControversial);
+  }
+
   if (error) {
     return <span>Error: {error.message}</span>;
   }
@@ -198,6 +204,18 @@ function ThoughtsBoard() {
   return (
     <div className="flex flex-col rounded items-center mt-4 mx-10">
       <p className="font-bold text-white text-2xl">Thoughts Board</p>
+      <div className="mt-2">
+        <input
+          className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-orange-600 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 checked:bg-violet-500 checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary hover:cursor-pointer focus:outline-none "
+          type="checkbox"
+          onChange={() => {
+            handleIsControversial(!isControversial);
+          }}
+        />
+        <label className="inline-block pl-[0.15rem]">
+          {isControversial ? "Controversial" : "Unpopular"}
+        </label>
+      </div>
       {data ? (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data.pages.map((page: any) => (
@@ -231,9 +249,9 @@ export function PostSection({ post }: { post: Post }) {
     <>
       <div className="flex flex-col text-left">
         <div className="border-b-2 border-stone-600 mx-4 py-3">
-          <button
+          <div
             id="button-post"
-            className="w-full py-2 px-1"
+            className="w-full py-2 px-1 hover:cursor-pointer"
             onClick={goToPostPage}
           >
             <div className="text-stone-400 flex">
@@ -249,7 +267,7 @@ export function PostSection({ post }: { post: Post }) {
                 <button className="px-2">💬</button>
               </div>
             </div>
-          </button>
+          </div>
         </div>
       </div>
     </>
