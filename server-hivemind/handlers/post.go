@@ -38,7 +38,9 @@ func (p *Posts) GetPostsWithPagination(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	posts, err := p.repo.GetPostsWithPagination(page)
+	sort := r.URL.Query().Get("sort")
+
+	posts, err := p.repo.GetPostsWithPagination(page, sort)
 	if err != nil {
 		http.Error(rw, "Error getting posts", http.StatusInternalServerError)
 		return

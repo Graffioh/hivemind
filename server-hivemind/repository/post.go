@@ -36,8 +36,18 @@ func (r *PostRepository) GetPosts() ([]*models.Post, error) {
 	return posts, nil
 }
 
-func (r *PostRepository) GetPostsWithPagination(page int) ([]*models.Post, error) {
-	rows, err := r.db.Query("SELECT id, user_id, title, content, created_at, up_vote, down_vote FROM posts ORDER BY created_at DESC LIMIT 10 OFFSET $1", page*5)
+func (r *PostRepository) GetPostsWithPagination(page int, sort string) ([]*models.Post, error) {
+	var query string
+
+	if sort == "CONTROVERSIAL" {
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY ABS(SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) - SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END)) ASC LIMIT 10 OFFSET $1;"
+	} else if sort == "UNPOPULAR" {
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET $1;"
+	} else {
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET $1;"
+	}
+
+	rows, err := r.db.Query(query, page*5)
 	if err != nil {
 		log.Printf("Error querying posts: %v", err)
 		return nil, err

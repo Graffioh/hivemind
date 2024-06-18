@@ -2,8 +2,10 @@ import { Post } from "../types";
 
 export async function fetchPostsPaginated({
     pageParam,
+    sorting
 }: {
     pageParam: number;
+    sorting: string;
 }): Promise<{
     data: Post[];
     currentPage: number;
@@ -17,7 +19,7 @@ export async function fetchPostsPaginated({
     const postsCount = await countResponse.json();
 
     const response = await fetch(
-        "http://localhost:8080/post/pagination?page=" + pageParam
+        `http://localhost:8080/post/pagination?page=${pageParam}&sort=${sorting}`
     );
     if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -37,7 +39,7 @@ export async function fetchPostsPaginated({
 }
 
 export async function fetchPost(postId: string) {
-    const response = await fetch("http://localhost:8080/post/" + postId);
+    const response = await fetch(`http://localhost:8080/post/${postId}`);
     if (!response.ok) {
         throw new Error("Network response was not ok");
     }

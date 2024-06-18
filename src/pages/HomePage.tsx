@@ -175,12 +175,18 @@ function PostForm({
   );
 }
 
+enum Sorting {
+  Mainstream = "MAINSTREAM",
+  Controversial = "CONTROVERSIAL",
+  Unpopular = "UNPOPULAR",
+}
+
 function ThoughtsBoard() {
-  const [isControversial, setIsControversial] = useState<boolean>(true);
+  const [sorting, setSorting] = useState<Sorting>(Sorting.Mainstream);
 
   const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["posts"],
-    queryFn: fetchPostsPaginated,
+    queryKey: ["posts", sorting],
+    queryFn: ({ pageParam }) => fetchPostsPaginated({ pageParam, sorting }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextPage,
   });
@@ -193,8 +199,8 @@ function ThoughtsBoard() {
     }
   }, [fetchNextPage, inView]);
 
-  function handleIsControversial(isControversial: boolean) {
-    setIsControversial(isControversial);
+  function handleSorting(sorting: Sorting) {
+    setSorting(sorting);
   }
 
   if (error) {
@@ -204,18 +210,7 @@ function ThoughtsBoard() {
   return (
     <div className="flex flex-col rounded items-center mt-4 mx-10">
       <p className="font-bold text-white text-2xl">Thoughts Board</p>
-      <div className="mt-2">
-        <input
-          className="mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-orange-600 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 checked:bg-violet-500 checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary hover:cursor-pointer focus:outline-none "
-          type="checkbox"
-          onChange={() => {
-            handleIsControversial(!isControversial);
-          }}
-        />
-        <label className="inline-block pl-[0.15rem]">
-          {isControversial ? "Controversial" : "Unpopular"}
-        </label>
-      </div>
+      <SegmentedControl sorting={sorting} handleSorting={handleSorting} />
       {data ? (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data.pages.map((page: any) => (
@@ -233,7 +228,7 @@ function ThoughtsBoard() {
   );
 }
 
-export function PostSection({ post }: { post: Post }) {
+function PostSection({ post }: { post: Post }) {
   const navigate = useNavigate();
 
   function goToPostPage() {
@@ -274,7 +269,7 @@ export function PostSection({ post }: { post: Post }) {
   );
 }
 
-export function LoginForm({ queryClient }: { queryClient: QueryClient }) {
+function LoginForm({ queryClient }: { queryClient: QueryClient }) {
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
@@ -348,6 +343,44 @@ export function LoginForm({ queryClient }: { queryClient: QueryClient }) {
         <div className="text-sm text-stone-400">
           or register by simply entering a new username and password
         </div>
+      </div>
+    </>
+  );
+}
+
+function SegmentedControl({
+  sorting,
+  handleSorting,
+}: {
+  sorting: Sorting;
+  handleSorting: (sorting: Sorting) => void;
+}) {
+  return (
+    <>
+      <div>Segmented Control</div>
+      <div>{sorting}</div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            handleSorting(Sorting.Mainstream);
+          }}
+        >
+          Mainstream
+        </button>
+        <button
+          onClick={() => {
+            handleSorting(Sorting.Controversial);
+          }}
+        >
+          Controversial
+        </button>
+        <button
+          onClick={() => {
+            handleSorting(Sorting.Unpopular);
+          }}
+        >
+          Unpopular
+        </button>
       </div>
     </>
   );
