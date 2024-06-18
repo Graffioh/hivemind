@@ -35,7 +35,7 @@ export default function VoteArrows({
   >({
     queryKey: ["reactions", { postId, commentId }],
     queryFn: () => fetchCurrentUserReaction(postId, commentId, currentUser!.id),
-    enabled: postId !== null || commentId !== null,
+    enabled: (postId !== null || commentId !== null) && !!currentUser,
   });
 
   const mutation = useMutation<Reaction, Error, Reaction>({
@@ -81,8 +81,6 @@ export default function VoteArrows({
     );
   }
 
-  console.log(currentUserVote);
-
   return (
     <>
       <div className={`flex ${vertical ? "flex-col" : "flex-row"}`}>
@@ -93,7 +91,7 @@ export default function VoteArrows({
               handleVote(1);
             }}
             className={`w-6 h-6 mb-1 ${
-              currentUserVote === 1 ? "bg-orange-500" : ""
+              currentUserVote === 1 ? "bg-orange-500 hover:bg-orange-500" : ""
             }`}
           >
             ↑
@@ -106,7 +104,9 @@ export default function VoteArrows({
               event.stopPropagation();
               handleVote(-1);
             }}
-            className={`w-6 h-6 ${currentUserVote === -1 ? "bg-violet-500" : ""}`}
+            className={`w-6 h-6 ${
+              currentUserVote === -1 ? "bg-violet-500 hover:bg-violet-500" : ""
+            }`}
           >
             ↓
           </button>
