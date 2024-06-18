@@ -357,13 +357,15 @@ function SegmentedControl({
 }) {
   return (
     <>
-      <div>Segmented Control</div>
-      <div>{sorting}</div>
-      <div className="flex gap-2">
+      <div className="flex mt-3 rounded border-2 border-stone-500 border-neutral-600">
         <button
           onClick={() => {
             handleSorting(Sorting.Mainstream);
           }}
+          className={`bg-transparent rounded-none px-1 ${
+            sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
+          }`}
+          disabled={sorting === "MAINSTREAM" ? true : false}
         >
           Mainstream
         </button>
@@ -371,6 +373,12 @@ function SegmentedControl({
           onClick={() => {
             handleSorting(Sorting.Controversial);
           }}
+          className={`bg-transparent rounded-none px-1 ${
+            sorting === "CONTROVERSIAL"
+              ? "bg-white text-black hover:bg-white"
+              : ""
+          }`}
+          disabled={sorting === "CONTROVERSIAL" ? true : false}
         >
           Controversial
         </button>
@@ -378,6 +386,10 @@ function SegmentedControl({
           onClick={() => {
             handleSorting(Sorting.Unpopular);
           }}
+          className={`bg-transparent rounded-none px-1 ${
+            sorting === "UNPOPULAR" ? "bg-white text-black hover:bg-white" : ""
+          }`}
+          disabled={sorting === "UNPOPULAR" ? true : false}
         >
           Unpopular
         </button>
