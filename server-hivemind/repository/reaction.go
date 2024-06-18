@@ -28,7 +28,7 @@ func (e *DuplicateReactionError) Error() string {
 	return fmt.Sprintf("User %d has already reacted to comment %d", e.UserID, e.CommentID)
 }
 
-func (r *ReactionRepository) GetPostReactions(post_id int) (*models.ReactionCounts, error) {
+func (r *ReactionRepository) GetPostReactionsCount(post_id int) (*models.ReactionCounts, error) {
 	var counts models.ReactionCounts
 
 	row := r.db.QueryRow("SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND reaction_type = 'post' AND reaction = 1;", post_id)
@@ -46,7 +46,7 @@ func (r *ReactionRepository) GetPostReactions(post_id int) (*models.ReactionCoun
 	return &counts, nil
 }
 
-func (r *ReactionRepository) GetCommentReactions(comment_id int) (*models.ReactionCounts, error) {
+func (r *ReactionRepository) GetCommentReactionsCount(comment_id int) (*models.ReactionCounts, error) {
 	var counts models.ReactionCounts
 
 	row := r.db.QueryRow("SELECT COUNT(*) FROM reactions WHERE comment_id = $1 AND reaction_type = 'comment' AND reaction = 1;", comment_id)
@@ -62,6 +62,38 @@ func (r *ReactionRepository) GetCommentReactions(comment_id int) (*models.Reacti
 	}
 
 	return &counts, nil
+}
+
+func (r *ReactionRepository) GetUserReactionToPost(post_id int, user_id int) (*int, error) {
+	var reaction_value *int
+
+	row := r.db.QueryRow("SELECT reaction FROM reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'post';", post_id, user_id)
+	err := row.Scan(&reaction_value)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		log.Printf("Error querying reaction: %v", err)
+		return nil, err
+	}
+
+	return reaction_value, nil
+}
+
+func (r *ReactionRepository) GetUserReactionToComment(comment_id int, user_id int) (*int, error) {
+	var reaction_value *int
+
+	row := r.db.QueryRow("SELECT reaction FROM reactions WHERE comment_id = $1 AND user_id = $2 AND reaction_type = 'comment';", comment_id, user_id)
+	err := row.Scan(&reaction_value)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		log.Printf("Error querying reaction: %v", err)
+		return nil, err
+	}
+
+	return reaction_value, nil
 }
 
 func (r *ReactionRepository) CreateReaction(reaction models.Reaction) (*models.Reaction, error) {

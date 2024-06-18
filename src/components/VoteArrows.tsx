@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Reaction, Votes, User } from "../types";
-import { fetchReactions, createReaction } from "../api/reaction";
+import {
+  fetchCurrentUserReaction,
+  fetchReactionsCounts,
+  createReaction,
+} from "../api/reaction";
 import { fetchUserFromSession } from "../api/user";
 
 export default function VoteArrows({
@@ -19,15 +23,27 @@ export default function VoteArrows({
     queryFn: () => fetchUserFromSession(),
   });
 
-  const { data: votes, error } = useQuery<Votes, Error>({
+  const { data: votesCount, error: votesCountError } = useQuery<Votes, Error>({
+    queryKey: ["reactions_count", { postId, commentId }],
+    queryFn: () => fetchReactionsCounts(postId, commentId),
+    enabled: postId !== null || commentId !== null,
+  });
+
+  const { data: currentUserVote, error: currentUserVoteError } = useQuery<
+    number,
+    Error
+  >({
     queryKey: ["reactions", { postId, commentId }],
-    queryFn: () => fetchReactions(postId, commentId),
+    queryFn: () => fetchCurrentUserReaction(postId, commentId, currentUser!.id),
     enabled: postId !== null || commentId !== null,
   });
 
   const mutation = useMutation<Reaction, Error, Reaction>({
     mutationFn: createReaction,
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["reactions_count", { postId, commentId }],
+      });
       queryClient.invalidateQueries({
         queryKey: ["reactions", { postId, commentId }],
       });
@@ -36,7 +52,7 @@ export default function VoteArrows({
 
   async function handleVote(reaction: number) {
     if (!currentUser) {
-      alert("You must login in order to vote!")
+      alert("You must login in order to vote!");
       return;
     }
 
@@ -54,36 +70,49 @@ export default function VoteArrows({
     mutation.mutate(newReaction);
   }
 
-  if (error) {
-    return <span>Error: {error.message}</span>;
+  if (votesCountError || currentUserVoteError) {
+    return (
+      <span>
+        Error:{" "}
+        {votesCountError
+          ? votesCountError.message
+          : currentUserVoteError?.message}
+      </span>
+    );
   }
 
+  console.log(currentUserVote);
+
   return (
-    <div className={`flex ${vertical ? "flex-col" : "flex-row"}`}>
-      <div className="mx-1">
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            handleVote(1);
-          }}
-          className="w-6 h-6 mb-1"
-        >
-          ↑
-        </button>
-        <p className="ml-2 text-orange-600 inline">{votes?.Upvotes}</p>
+    <>
+      <div className={`flex ${vertical ? "flex-col" : "flex-row"}`}>
+        <div className="mx-1">
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              handleVote(1);
+            }}
+            className={`w-6 h-6 mb-1 ${
+              currentUserVote === 1 ? "bg-orange-500" : ""
+            }`}
+          >
+            ↑
+          </button>
+          <p className="ml-2 text-orange-600 inline">{votesCount?.Upvotes}</p>
+        </div>
+        <div className="mx-1">
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              handleVote(-1);
+            }}
+            className={`w-6 h-6 ${currentUserVote === -1 ? "bg-violet-500" : ""}`}
+          >
+            ↓
+          </button>
+          <p className="ml-2 inline text-violet-500">{votesCount?.Downvotes}</p>{" "}
+        </div>
       </div>
-      <div className="mx-1">
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            handleVote(-1);
-          }}
-          className="w-6 h-6"
-        >
-          ↓
-        </button>
-        <p className="ml-2 inline text-violet-500">{votes?.Downvotes}</p>{" "}
-      </div>
-    </div>
+    </>
   );
 }

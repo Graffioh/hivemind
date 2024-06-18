@@ -40,8 +40,10 @@ func NewRouter(db *sql.DB) http.Handler {
 	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.GetComments).Methods("GET")
 	router.HandleFunc("/comment/{post_id:[0-9]+}", ch.CreateComment).Methods("POST")
 
-	router.HandleFunc("/reaction/post/{post_id:[0-9]+}", rh.GetPostReactions).Methods("GET")
-	router.HandleFunc("/reaction/comment/{comment_id:[0-9]+}", rh.GetCommentReactions).Methods("GET")
+	router.HandleFunc("/reaction/post/{post_id:[0-9]+}", rh.GetUserReactionToPost).Methods("GET")
+	router.HandleFunc("/reaction/comment/{comment_id:[0-9]+}", rh.GetUserReactionToComment).Methods("GET")
+	router.HandleFunc("/reaction/post/count/{post_id:[0-9]+}", rh.GetPostReactionsCount).Methods("GET")
+	router.HandleFunc("/reaction/comment/count/{comment_id:[0-9]+}", rh.GetCommentReactionsCount).Methods("GET")
 	router.HandleFunc("/reaction", rh.CreateReaction).Methods("POST")
 
 	c := cors.New(cors.Options{

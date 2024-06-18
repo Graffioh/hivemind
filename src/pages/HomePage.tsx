@@ -357,7 +357,7 @@ function SegmentedControl({
 }) {
   return (
     <>
-      <div className="flex mt-3 rounded border-2 border-stone-500 border-neutral-600">
+      <div className="flex my-3 rounded border-2 border-stone-500 border-neutral-600">
         <button
           onClick={() => {
             handleSorting(Sorting.Mainstream);
