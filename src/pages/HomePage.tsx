@@ -71,7 +71,7 @@ export default function HomePage() {
                 </div>
                 <button
                   onClick={() => handleLogout(currentUser!.id)}
-                  className="text-sm bg-transparent text-stone-500 hover:text-stone-400 hover:bg-transparent w-fit"
+                  className="text-sm bg-transparent text-neutral-500 hover:text-stone-400 hover:bg-transparent w-fit"
                 >
                   log out
                 </button>
@@ -210,7 +210,7 @@ function ThoughtsBoard() {
   return (
     <div className="flex flex-col rounded items-center mt-4 mx-10">
       <p className="font-bold text-white text-2xl">Thoughts Board</p>
-      <SegmentedControl sorting={sorting} handleSorting={handleSorting} />
+      <SegmentedControlFilter sorting={sorting} handleSorting={handleSorting} />
       {data ? (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data.pages.map((page: any) => (
@@ -348,7 +348,7 @@ function LoginForm({ queryClient }: { queryClient: QueryClient }) {
   );
 }
 
-function SegmentedControl({
+function SegmentedControlFilter({
   sorting,
   handleSorting,
 }: {
@@ -363,7 +363,7 @@ function SegmentedControl({
             handleSorting(Sorting.Mainstream);
           }}
           className={`bg-transparent rounded-none px-1 ${
-            sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
+            sorting === "MAINSTREAM" ? "bg-neutral-200 text-black hover:bg-white" : ""
           }`}
           disabled={sorting === "MAINSTREAM" ? true : false}
         >

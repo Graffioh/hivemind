@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"server-hivemind/models"
 	"server-hivemind/repository"
 	"server-hivemind/utils"
@@ -86,8 +87,8 @@ func (p *Posts) CreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if post.UserID == 0 || post.Title == "" || post.Content == "" {
-		http.Error(rw, "User ID and content are required", http.StatusBadRequest)
+	if !isPostValid(post) {
+		http.Error(rw, "Post inputs not valid!", http.StatusBadRequest)
 		return
 	}
 
@@ -100,4 +101,23 @@ func (p *Posts) CreatePost(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	utils.ToJSON(rw, createdPost)
+}
+
+func isPostValid(post models.Post) bool {
+	if post.UserID == 0 || post.Title == "" || post.Content == "" {
+		return false
+	}
+
+	titleRegex := regexp.MustCompile(`^.{3,100}$`)
+	contentRegex := regexp.MustCompile(`^.{10,1000}$`)
+
+	if !titleRegex.MatchString(post.Title) {
+		return false
+	}
+
+	if !contentRegex.MatchString(post.Content) {
+		return false
+	}
+
+	return true
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"server-hivemind/models"
 	"server-hivemind/repository"
 	"server-hivemind/utils"
@@ -83,9 +84,8 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// REGISTRATION
 		//
-		// http.Error(rw, "No user found", http.StatusBadRequest)
-		if user.Username == "" || user.Password == "" {
-			http.Error(rw, "Username and Password are required", http.StatusBadRequest)
+		if !isUserValid(user) {
+			http.Error(rw, "User inputs not valid!", http.StatusBadRequest)
 			return
 		}
 
@@ -105,7 +105,7 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 			Name:     "session_id",
 			Value:    token,
 			HttpOnly: true,
-			Secure:   false, // Set to true if using HTTPS
+			Secure:   false,
 			MaxAge:   token_exp * 24 * 60 * 60,
 			SameSite: http.SameSiteLaxMode,
 			Path:     "/",
@@ -129,7 +129,7 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 		Name:     "session_id",
 		Value:    token,
 		HttpOnly: true,
-		Secure:   false, // Set to true if using HTTPS
+		Secure:   false,
 		MaxAge:   token_exp * 24 * 60 * 60,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
@@ -172,4 +172,25 @@ func (u *Users) DeleteSession(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, &exp_cookie)
 
 	rw.Write([]byte("Session cookie deleted"))
+}
+
+func isUserValid(user models.User) bool {
+	if user.Username == "" || user.Password == "" {
+		return false
+	}
+
+	usernameRegex := regexp.MustCompile(`^[a-zA-Z0-9_]{3,20}$`)
+	passwordRegex := regexp.MustCompile(`^\S{10,30}$`)
+
+	// q allowed only for testing!!!!!!!!!!!!
+	if !usernameRegex.MatchString(user.Username) && user.Username != "q" {
+		return false
+	}
+
+	// q allowed only for testing!!!!!!!!!!!!
+	if !passwordRegex.MatchString(user.Password) && user.Password != "q" {
+		return false
+	}
+
+	return true
 }

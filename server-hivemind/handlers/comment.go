@@ -45,7 +45,7 @@ func (c *Comments) CreateComment(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if comment.PostID == 0 || comment.UserID == 0 || comment.Content == "" {
-		http.Error(rw, "Post ID, User ID and content are required", http.StatusBadRequest)
+		http.Error(rw, "Comment inputs not valid!", http.StatusBadRequest)
 		return
 	}
 
