@@ -51,6 +51,12 @@ export default function HomePage() {
     }
   }, [currentUser, isLoading, isError]);
 
+  const [sorting, setSorting] = useState<Sorting>(Sorting.Mainstream);
+
+  function handleSorting(sorting: Sorting) {
+    setSorting(sorting);
+  }
+
   return (
     <>
       <div className="flex flex-col justify-center items-center">
@@ -76,12 +82,16 @@ export default function HomePage() {
                   log out
                 </button>
               </div>
-              <PostForm queryClient={queryClient} currentUser={currentUser!} />
+              <PostForm
+                queryClient={queryClient}
+                currentUser={currentUser!}
+                sorting={sorting}
+              />
             </>
           ) : (
             <LoginForm queryClient={queryClient} />
           )}
-          <ThoughtsBoard />
+          <ThoughtsBoard sorting={sorting} handleSorting={handleSorting} />
         </div>
       </div>
     </>
@@ -91,9 +101,11 @@ export default function HomePage() {
 function PostForm({
   queryClient,
   currentUser,
+  sorting,
 }: {
   queryClient: QueryClient;
   currentUser: User;
+  sorting: Sorting;
 }) {
   const [isPostActive, setIsPostActive] = useState(false);
 
@@ -103,7 +115,7 @@ function PostForm({
   const mutation = useMutation<Post, Error, Post>({
     mutationFn: createPost,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["posts", sorting] });
     },
   });
 
@@ -175,9 +187,13 @@ enum Sorting {
   Unpopular = "UNPOPULAR",
 }
 
-function ThoughtsBoard() {
-  const [sorting, setSorting] = useState<Sorting>(Sorting.Mainstream);
-
+function ThoughtsBoard({
+  sorting,
+  handleSorting,
+}: {
+  sorting: Sorting;
+  handleSorting: (sorting: Sorting) => void;
+}) {
   const { data, error, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["posts", sorting],
     queryFn: ({ pageParam }) => fetchPostsPaginated({ pageParam, sorting }),
@@ -192,10 +208,6 @@ function ThoughtsBoard() {
       fetchNextPage();
     }
   }, [fetchNextPage, inView]);
-
-  function handleSorting(sorting: Sorting) {
-    setSorting(sorting);
-  }
 
   if (error) {
     return <span>Error: {error.message}</span>;

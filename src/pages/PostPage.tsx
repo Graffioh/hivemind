@@ -215,7 +215,7 @@ export function ContentRenderer({ content }: { content: string }) {
           {content}
         </Markdown>
       ) : (
-        <div>{content}</div>
+        <div className="my-4">{content}</div>
       )}
     </div>
   );
