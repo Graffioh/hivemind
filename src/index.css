@@ -32,11 +32,11 @@ button {
 }
 
 input:focus {
-  outline: 4px auto white;
+  outline: 4px auto rgb(211, 211, 211);
 }
 
 textarea:focus {
-  outline: 4px auto white;
+  outline: 4px auto rgb(211, 211, 211);
 }
 
 button:hover {

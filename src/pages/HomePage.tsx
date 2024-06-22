@@ -356,8 +356,8 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Mainstream);
           }}
-          className={`bg-transparent rounded-none px-1 ${
-            sorting === "MAINSTREAM" ? "bg-neutral-200 text-black hover:bg-white" : ""
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
+            sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
           }`}
           disabled={sorting === "MAINSTREAM" ? true : false}
         >
@@ -367,7 +367,7 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Controversial);
           }}
-          className={`bg-transparent rounded-none px-1 ${
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
             sorting === "CONTROVERSIAL"
               ? "bg-white text-black hover:bg-white"
               : ""
@@ -380,7 +380,7 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Unpopular);
           }}
-          className={`bg-transparent rounded-none px-1 ${
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
             sorting === "UNPOPULAR" ? "bg-white text-black hover:bg-white" : ""
           }`}
           disabled={sorting === "UNPOPULAR" ? true : false}

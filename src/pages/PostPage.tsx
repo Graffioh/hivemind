@@ -105,7 +105,7 @@ function CommentForm({
       <textarea
         ref={textAreaRef}
         rows={3}
-        className="md:w-2/6 p-1 mt-6 rounded border-2 border-neutral-600 mr-4"
+        className="md:w-2/6 p-1 mt-6 rounded border-2 border-neutral-300 mr-4"
         required
         onChange={handleIsCommentActive}
         placeholder="Comment here..."
@@ -129,12 +129,23 @@ function TopSection({ post }: { post: Post }) {
 
   return (
     <div className="flex items-center border-b-2 pl-2">
-      <VoteArrows vertical={true} postId={post.id} commentId={null} />
-      <div className="flex flex-col pl-3 pb-4 mt-2">
-        <div className="text-stone-400"> &lt; {userByPost?.username} &gt;</div>
-        <div className="text-2xl font-bold mb-1">{post.title}</div>
+      <div className="flex flex-col w-full">
+        <div className="flex">
+          <div className="mt-2">
+            <VoteArrows vertical={true} postId={post.id} commentId={null} />
+          </div>
+          <div className="flex flex-col pl-3 pb-4 mt-2">
+            <div className="text-stone-400">
+              {" "}
+              &lt; {userByPost?.username} &gt;
+            </div>
+            <div className="text-2xl font-bold mb-1">{post.title}</div>
+          </div>
+        </div>
         {/* <div className="flex text-xl">{post.content}</div> */}
-        <MarkdownRenderer content={post.content} />
+        <div className="ml-16 mb-4">
+          <ContentRenderer content={post.content} />
+        </div>
       </div>
     </div>
   );
@@ -179,10 +190,33 @@ export function CommentSection({ comment }: { comment: Comment }) {
   );
 }
 
-export function MarkdownRenderer({ content }: { content: string }) {
+export function ContentRenderer({ content }: { content: string }) {
+  const [isMarkdown, setIsMarkdown] = useState<boolean>(false);
+
+  function handleIsMarkdown(check: boolean) {
+    setIsMarkdown(!check);
+  }
+
   return (
-    <Markdown className="markdown" remarkPlugins={[remarkGfm]}>
-      {content}
-    </Markdown>
+    <div>
+      <label>
+        <input
+          type="checkbox"
+          checked={isMarkdown}
+          onChange={() => {
+            handleIsMarkdown(isMarkdown);
+          }}
+          className=""
+        />
+        <span className="ml-1">Markdown</span>
+      </label>
+      {isMarkdown ? (
+        <Markdown className="markdown" remarkPlugins={[remarkGfm]}>
+          {content}
+        </Markdown>
+      ) : (
+        <div>{content}</div>
+      )}
+    </div>
   );
 }
