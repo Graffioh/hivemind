@@ -7,6 +7,8 @@ import { fetchPost } from "../api/post";
 import { fetchComments, createComment } from "../api/comment";
 import { fetchUserFromSession, fetchUserFromId } from "../api/user";
 import LoadingSpinner from "../components/LoadingSpinner";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function PostPage() {
   const [searchParams] = useSearchParams();
@@ -131,7 +133,8 @@ function TopSection({ post }: { post: Post }) {
       <div className="flex flex-col pl-3 pb-4 mt-2">
         <div className="text-stone-400"> &lt; {userByPost?.username} &gt;</div>
         <div className="text-2xl font-bold mb-1">{post.title}</div>
-        <div className="flex text-xl">{post.content}</div>
+        {/* <div className="flex text-xl">{post.content}</div> */}
+        <MarkdownRenderer content={post.content} />
       </div>
     </div>
   );
@@ -173,5 +176,13 @@ export function CommentSection({ comment }: { comment: Comment }) {
         <VoteArrows vertical={false} postId={null} commentId={comment.id} />
       </div>
     </>
+  );
+}
+
+export function MarkdownRenderer({ content }: { content: string }) {
+  return (
+    <Markdown className="markdown" remarkPlugins={[remarkGfm]}>
+      {content}
+    </Markdown>
   );
 }

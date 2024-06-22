@@ -109,13 +109,8 @@ func isPostValid(post models.Post) bool {
 	}
 
 	titleRegex := regexp.MustCompile(`^.{3,100}$`)
-	contentRegex := regexp.MustCompile(`^.{10,1000}$`)
 
 	if !titleRegex.MatchString(post.Title) {
-		return false
-	}
-
-	if !contentRegex.MatchString(post.Content) {
 		return false
 	}
 

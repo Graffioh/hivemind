@@ -119,15 +119,9 @@ function PostForm({
       const content = textAreaRef.current.value;
 
       const titleRegex = /^.{3,100}$/;
-      const contentRegex = /^.{10,1000}$/;
 
       if (!titleRegex.test(title)) {
         alert("Title must be 3-100 characters long.");
-        return;
-      }
-
-      if (!contentRegex.test(content)) {
-        alert("Content must be 10-1000 characters long.");
         return;
       }
 
