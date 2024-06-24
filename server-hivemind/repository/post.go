@@ -39,8 +39,9 @@ func (r *PostRepository) GetPosts() ([]*models.Post, error) {
 func (r *PostRepository) GetPostsWithPagination(page int, sort string) ([]*models.Post, error) {
 	var query string
 
+	// thanks claude 3.5 sonnet
 	if sort == "CONTROVERSIAL" {
-		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY ABS(SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) - SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END)) ASC LIMIT 10 OFFSET $1;"
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY ABS(SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) - SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END)) DESC LIMIT 10 OFFSET $1;"
 	} else if sort == "UNPOPULAR" {
 		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET $1;"
 	} else {

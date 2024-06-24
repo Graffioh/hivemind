@@ -51,7 +51,7 @@ export default function HomePage() {
     }
   }, [currentUser, isLoading, isError]);
 
-  const [sorting, setSorting] = useState<Sorting>(Sorting.Mainstream);
+  const [sorting, setSorting] = useState<Sorting>(Sorting.Controversial);
 
   function handleSorting(sorting: Sorting) {
     setSorting(sorting);
@@ -366,24 +366,12 @@ function SegmentedControlFilter({
       <div className="flex my-3 rounded border-2 border-stone-500 border-neutral-600">
         <button
           onClick={() => {
-            handleSorting(Sorting.Mainstream);
-          }}
-          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
-            sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
-          }`}
-          disabled={sorting === "MAINSTREAM" ? true : false}
-        >
-          Mainstream
-        </button>
-        <button
-          onClick={() => {
             handleSorting(Sorting.Controversial);
           }}
-          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
-            sorting === "CONTROVERSIAL"
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${sorting === "CONTROVERSIAL"
               ? "bg-white text-black hover:bg-white"
               : ""
-          }`}
+            }`}
           disabled={sorting === "CONTROVERSIAL" ? true : false}
         >
           Controversial
@@ -392,12 +380,21 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Unpopular);
           }}
-          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
-            sorting === "UNPOPULAR" ? "bg-white text-black hover:bg-white" : ""
-          }`}
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${sorting === "UNPOPULAR" ? "bg-white text-black hover:bg-white" : ""
+            }`}
           disabled={sorting === "UNPOPULAR" ? true : false}
         >
           Unpopular
+        </button>
+        <button
+          onClick={() => {
+            handleSorting(Sorting.Mainstream);
+          }}
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
+            }`}
+          disabled={sorting === "MAINSTREAM" ? true : false}
+        >
+          Mainstream
         </button>
       </div>
     </>
