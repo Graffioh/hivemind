@@ -66,18 +66,18 @@ export default function HomePage() {
         <div className="flex flex-col w-full">
           {isLoggedIn ? (
             <>
-              <div className="flex flex-col justify-center items-center mb-8 text-center">
+              <div className="flex flex-col justify-center items-center mb-6 text-center">
                 <div className="text-xl md:text-2xl mt-3 font-bold text-wrap px-2">
                   {" "}
                   Welcome
-                  <span className="pl-2 text-stone-400">
+                  <span className="pl-2 text-yellow-500">
                     {currentUser!.username}
                   </span>
                   , <br /> Start posting and enter the hive!
                 </div>
                 <button
                   onClick={() => handleLogout(currentUser!.id)}
-                  className="text-sm bg-transparent text-neutral-500 hover:text-stone-400 hover:bg-transparent w-fit"
+                  className="text-sm bg-transparent text-stone-400 hover:text-neutral-500 hover:bg-transparent w-fit"
                 >
                   log out
                 </button>
@@ -170,9 +170,21 @@ function PostForm({
         required
         onChange={handleIsPostActive}
       />
+      <span className="text-sm">
+        (You can format the text using{" "}
+        <a
+          href="https://www.markdownguide.org/basic-syntax/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-stone-400 hover:text-neutral-500"
+        >
+          markdown syntax
+        </a>
+        )
+      </span>
       <button
         onClick={handlePost}
-        className="m-4 w-24 h-12 disabled:bg-stone-800 font-bold"
+        className="m-4 mb-6 w-24 h-12 disabled:bg-stone-800 font-bold"
         disabled={!isPostActive}
       >
         Post
@@ -276,16 +288,24 @@ function PostSection({ post }: { post: Post }) {
 }
 
 function LoginForm({ queryClient }: { queryClient: QueryClient }) {
-  const usernameInputRef = useRef<HTMLInputElement>(null);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-
   const mutation = useMutation<User, Error, User>({
     mutationFn: createUser,
   });
 
-  function handleLogin() {
-    const username = usernameInputRef.current?.value ?? "";
-    const password = passwordInputRef.current?.value ?? "";
+  function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = {
+      usernameData: (
+        event.currentTarget.elements.namedItem("username") as HTMLInputElement
+      ).value,
+      passwordData: (
+        event.currentTarget.elements.namedItem("password") as HTMLInputElement
+      ).value,
+    };
+
+    const username = formData.usernameData;
+    const password = formData.passwordData;
 
     if (!username || !password) {
       console.error("Username or password is empty");
@@ -298,7 +318,7 @@ function LoginForm({ queryClient }: { queryClient: QueryClient }) {
     // q allowed only for testing!!!!!!!!!!!!
     if (!usernameRegex.test(username) && username != "q") {
       alert(
-        "Username must be 3-20 characters long and can only contain letters, numbers, and underscores"
+        "Username must be 3-20 characters long and can only contain letters, numbers, and underscores",
       );
       return;
     }
@@ -328,28 +348,29 @@ function LoginForm({ queryClient }: { queryClient: QueryClient }) {
 
   return (
     <>
-      <div className="flex flex-col m-4 items-center justify-center">
-        <input
-          placeholder="username"
-          className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
-          ref={usernameInputRef}
-          required
-        ></input>
-        <input
-          type="password"
-          placeholder="password"
-          className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
-          ref={passwordInputRef}
-          required
-          pattern="/^\S{10,30}$/m"
-        ></input>
-        <button onClick={handleLogin} className="mb-2 w-32 h-8">
-          Login/Register
-        </button>
-        <div className="text-sm text-stone-400">
-          or register by simply entering a new username and password
+      <form onSubmit={handleLogin}>
+        <div className="flex flex-col m-4 items-center justify-center">
+          <input
+            name="username"
+            id="username"
+            placeholder="username"
+            className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
+            required
+          ></input>
+          <input
+            name="password"
+            id="password"
+            type="password"
+            placeholder="password"
+            className="m-2 px-2 py-1 rounded border-2 border-neutral-600"
+            required
+          ></input>
+          <button className="mb-2 w-32 h-8">Login/Register</button>
+          <div className="text-sm text-stone-400">
+            or register by simply entering a new username and password
+          </div>
         </div>
-      </div>
+      </form>
     </>
   );
 }
@@ -368,10 +389,11 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Controversial);
           }}
-          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${sorting === "CONTROVERSIAL"
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
+            sorting === "CONTROVERSIAL"
               ? "bg-white text-black hover:bg-white"
               : ""
-            }`}
+          }`}
           disabled={sorting === "CONTROVERSIAL" ? true : false}
         >
           Controversial
@@ -380,8 +402,9 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Unpopular);
           }}
-          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${sorting === "UNPOPULAR" ? "bg-white text-black hover:bg-white" : ""
-            }`}
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
+            sorting === "UNPOPULAR" ? "bg-white text-black hover:bg-white" : ""
+          }`}
           disabled={sorting === "UNPOPULAR" ? true : false}
         >
           Unpopular
@@ -390,8 +413,9 @@ function SegmentedControlFilter({
           onClick={() => {
             handleSorting(Sorting.Mainstream);
           }}
-          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
-            }`}
+          className={`bg-transparent rounded-none px-1 transition-colors duration-200 ease-in-out ${
+            sorting === "MAINSTREAM" ? "bg-white text-black hover:bg-white" : ""
+          }`}
           disabled={sorting === "MAINSTREAM" ? true : false}
         >
           Mainstream

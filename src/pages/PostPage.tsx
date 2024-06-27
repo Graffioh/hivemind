@@ -9,10 +9,14 @@ import { fetchUserFromSession, fetchUserFromId } from "../api/user";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
+import { useNavigate } from "react-router-dom";
+import MDLogo from "../assets/md-logo.png";
 
 export default function PostPage() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("post_id");
+  const navigate = useNavigate();
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["current_user"],
@@ -33,9 +37,21 @@ export default function PostPage() {
     return <span>Error: {postError?.message || commentsError?.message}</span>;
   }
 
+  function goToHomePage() {
+    navigate(`/`);
+  }
+
   return (
     <>
       <div className="flex flex-col">
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={goToHomePage}
+            className="bg-transparent hover:bg-transparent"
+          >
+            <HivemindSVG width={48} height={64} />
+          </button>
+        </div>
         {post ? (
           <>
             <TopSection post={post} />
@@ -105,7 +121,7 @@ function CommentForm({
       <textarea
         ref={textAreaRef}
         rows={3}
-        className="md:w-2/6 p-1 mt-6 rounded border-2 border-neutral-300 mr-4"
+        className="md:w-2/6 p-1 mt-6 rounded border-2 border-neutral-600 mr-4"
         required
         onChange={handleIsCommentActive}
         placeholder="Comment here..."
@@ -128,7 +144,7 @@ function TopSection({ post }: { post: Post }) {
   });
 
   return (
-    <div className="flex items-center border-b-2 pl-2">
+    <div className="flex items-center border-b-2 border-neutral-400 pl-2">
       <div className="flex flex-col w-full">
         <div className="flex">
           <div className="mt-2">
@@ -142,7 +158,6 @@ function TopSection({ post }: { post: Post }) {
             <div className="text-2xl font-bold mb-1">{post.title}</div>
           </div>
         </div>
-        {/* <div className="flex text-xl">{post.content}</div> */}
         <div className="ml-16 mb-4">
           <ContentRenderer content={post.content} />
         </div>
@@ -193,22 +208,19 @@ export function CommentSection({ comment }: { comment: Comment }) {
 export function ContentRenderer({ content }: { content: string }) {
   const [isMarkdown, setIsMarkdown] = useState<boolean>(false);
 
-  function handleIsMarkdown(check: boolean) {
-    setIsMarkdown(!check);
+  function handleIsMarkdown() {
+    setIsMarkdown((prev) => !prev);
   }
 
   return (
     <div>
       <label>
-        <input
-          type="checkbox"
-          checked={isMarkdown}
-          onChange={() => {
-            handleIsMarkdown(isMarkdown);
-          }}
-          className=""
-        />
-        <span className="ml-1">Markdown</span>
+        <button
+          onClick={handleIsMarkdown}
+          className={`bg-transparent hover:bg-transparent w-8 h-6 ${isMarkdown ? "bg-stone-500 hover:bg-stone-500" : ""}`}
+        >
+          <img src={MDLogo} alt="markdown logo" className="w-6 h-4 ml-1" />
+        </button>
       </label>
       {isMarkdown ? (
         <Markdown className="markdown" remarkPlugins={[remarkGfm]}>
