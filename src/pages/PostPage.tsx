@@ -12,6 +12,7 @@ import remarkGfm from "remark-gfm";
 import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
 import { useNavigate } from "react-router-dom";
 import MDLogo from "../assets/md-logo.png";
+import MDLogoWhite from "../assets/md-logo-white.png";
 
 export default function PostPage() {
   const [searchParams] = useSearchParams();
@@ -124,10 +125,9 @@ function CommentForm({
         className="md:w-2/6 p-1 mt-6 rounded border-2 border-neutral-600 mr-4"
         required
         onChange={handleIsCommentActive}
-        placeholder="Comment here..."
       ></textarea>
       <button
-        className="my-3 w-20 h-8 disabled:bg-stone-800 font-bold"
+        className="my-3 w-24 h-8 disabled:bg-stone-800 font-bold"
         onClick={handleCommentCreation}
         disabled={!isCommentActive}
       >
@@ -212,14 +212,20 @@ export function ContentRenderer({ content }: { content: string }) {
     setIsMarkdown((prev) => !prev);
   }
 
+  console.log(isMarkdown);
+
   return (
     <div>
       <label>
         <button
           onClick={handleIsMarkdown}
-          className={`bg-transparent hover:bg-transparent w-8 h-6 ${isMarkdown ? "bg-stone-500 hover:bg-stone-500" : ""}`}
+          className="bg-transparent hover:bg-transparent w-8 h-6"
         >
-          <img src={MDLogo} alt="markdown logo" className="w-6 h-4 ml-1" />
+          <img
+            src={isMarkdown ? MDLogo : MDLogoWhite}
+            alt="markdown logo"
+            className="w-6 h-4 ml-1"
+          />
         </button>
       </label>
       {isMarkdown ? (

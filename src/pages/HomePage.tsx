@@ -241,7 +241,7 @@ function ThoughtsBoard({
       ) : (
         <LoadingSpinner />
       )}
-      <div ref={ref}>{isFetchingNextPage && "Loading..."}</div>
+      <div ref={ref}>{isFetchingNextPage && <LoadingSpinner />}</div>
     </div>
   );
 }
