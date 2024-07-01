@@ -18,10 +18,12 @@ export default function VoteArrows({
 }) {
   const queryClient = useQueryClient();
 
-  const { data: currentUser } = useQuery<User>({
-    queryKey: ["current_user"],
-    queryFn: () => fetchUserFromSession(),
-  });
+  const { data: currentUser, isLoading: isUserLoading } = useQuery<User | null>(
+    {
+      queryKey: ["current_user"],
+      queryFn: () => fetchUserFromSession(),
+    },
+  );
 
   const { data: votesCount, error: votesCountError } = useQuery<Votes, Error>({
     queryKey: ["reactions_count", { postId, commentId }],
@@ -30,12 +32,18 @@ export default function VoteArrows({
   });
 
   const { data: currentUserVote, error: currentUserVoteError } = useQuery<
-    number,
+    number | null,
     Error
   >({
-    queryKey: ["reactions", { postId, commentId }],
-    queryFn: () => fetchCurrentUserReaction(postId, commentId, currentUser!.id),
-    enabled: (postId !== null || commentId !== null) && !!currentUser,
+    queryKey: ["reactions", { postId, commentId, userId: currentUser?.id }],
+    queryFn: () =>
+      currentUser
+        ? fetchCurrentUserReaction(postId, commentId, currentUser.id)
+        : Promise.resolve(null),
+    enabled:
+      (postId !== null || commentId !== null) &&
+      !!currentUser &&
+      !isUserLoading,
   });
 
   const mutation = useMutation<Reaction, Error, Reaction>({
@@ -45,7 +53,7 @@ export default function VoteArrows({
         queryKey: ["reactions_count", { postId, commentId }],
       });
       queryClient.invalidateQueries({
-        queryKey: ["reactions", { postId, commentId }],
+        queryKey: ["reactions", { postId, commentId, userId: currentUser?.id }],
       });
     },
   });
