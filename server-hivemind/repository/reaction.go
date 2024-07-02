@@ -32,8 +32,8 @@ func (r *ReactionRepository) GetPostReactionsCount(post_id int) (*models.Reactio
 	var counts models.ReactionCounts
 	query := `
 		SELECT 
-			SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
-			SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
+			COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) as upvotes,
+			COALESCE(SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END), 0) as downvotes
 		FROM reactions 
 		WHERE post_id = $1 AND reaction_type = 'post'
 	`
@@ -49,8 +49,8 @@ func (r *ReactionRepository) GetCommentReactionsCount(comment_id int) (*models.R
 	var reaction_counts models.ReactionCounts
 	query := `
 		SELECT 
-			SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
-			SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
+			COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) as upvotes,
+			COALESCE(SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END), 0) as downvotes
 		FROM reactions 
 		WHERE comment_id = $1 AND reaction_type = 'comment'
 	`

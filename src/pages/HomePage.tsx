@@ -157,7 +157,7 @@ function PostForm({
     <div className="flex flex-col items-center">
       <input
         ref={titleInputRef}
-        className="w-96 p-1 rounded border-2 border-neutral-600 mb-1"
+        className="w-10/12 md:w-96 p-1 rounded border-2 border-neutral-600 mb-1"
         placeholder="Title"
         required
         onChange={handleIsPostActive}
