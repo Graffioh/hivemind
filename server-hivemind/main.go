@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"server-hivemind/config"
 	"server-hivemind/router"
 	"time"
@@ -11,6 +12,7 @@ import (
 func main() {
 	if err := run(); err != nil {
 		log.Fatalf("Error running the app: %v", err)
+		os.Exit(1)
 	}
 }
 

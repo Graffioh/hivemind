@@ -17,7 +17,7 @@ type Users struct {
 	repo *repository.UserRepository
 }
 
-func NewUsers(repo *repository.UserRepository) *Users {
+func NewUserHandler(repo *repository.UserRepository) *Users {
 	return &Users{repo: repo}
 }
 

@@ -16,7 +16,7 @@ type Posts struct {
 	repo *repository.PostRepository
 }
 
-func NewPosts(repo *repository.PostRepository) *Posts {
+func NewPostHandler(repo *repository.PostRepository) *Posts {
 	return &Posts{repo: repo}
 }
 

@@ -14,17 +14,16 @@ import (
 )
 
 func NewRouter(db *sql.DB) http.Handler {
-
 	router := mux.NewRouter()
 
 	ur := repository.NewUserRepository(db)
-	uh := handlers.NewUsers(ur)
+	uh := handlers.NewUserHandler(ur)
 	pr := repository.NewPostRepository(db)
-	ph := handlers.NewPosts(pr)
+	ph := handlers.NewPostHandler(pr)
 	cr := repository.NewCommentRepository(db)
-	ch := handlers.NewComments(cr)
+	ch := handlers.NewCommentHandler(cr)
 	rr := repository.NewReactionRepository(db)
-	rh := handlers.NewReactions(rr)
+	rh := handlers.NewReactionHandler(rr)
 
 	router.HandleFunc("/user/current", uh.GetCurrentUser).Methods("GET")
 	router.HandleFunc("/user/{id:[0-9]+}", uh.GetUserById).Methods("GET")

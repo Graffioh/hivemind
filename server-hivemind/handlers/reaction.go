@@ -15,7 +15,7 @@ type Reactions struct {
 	repo *repository.ReactionRepository
 }
 
-func NewReactions(repo *repository.ReactionRepository) *Reactions {
+func NewReactionHandler(repo *repository.ReactionRepository) *Reactions {
 	return &Reactions{repo: repo}
 }
 

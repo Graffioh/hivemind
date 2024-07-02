@@ -22,6 +22,9 @@ export default function PostPage() {
   const { data: currentUser } = useQuery<User>({
     queryKey: ["current_user"],
     queryFn: () => fetchUserFromSession(),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: post, error: postError } = useQuery<Post>({
@@ -158,7 +161,7 @@ function TopSection({ post }: { post: Post }) {
             <div className="text-2xl font-bold mb-1">{post.title}</div>
           </div>
         </div>
-        <div className="ml-16 mb-4">
+        <div className="ml-16 mb-4 mr-2">
           <ContentRenderer content={post.content} />
         </div>
       </div>
@@ -211,8 +214,6 @@ export function ContentRenderer({ content }: { content: string }) {
   function handleIsMarkdown() {
     setIsMarkdown((prev) => !prev);
   }
-
-  console.log(isMarkdown);
 
   return (
     <div>

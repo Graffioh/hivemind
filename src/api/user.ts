@@ -1,54 +1,55 @@
 import { User } from "../types";
 
 export async function createUser(newUser: User): Promise<User> {
-    const response = await fetch("http://localhost:8080/user", {
-        method: "POST",
-        body: JSON.stringify(newUser),
-        credentials: 'include'
-    });
+  const response = await fetch("http://localhost:8080/user", {
+    method: "POST",
+    body: JSON.stringify(newUser),
+    credentials: "include",
+  });
 
-    if (!response.ok) {
-        if (response.statusText === "Conflict") {
-            alert("Username already in use!")
-        }
-
-        throw new Error("Failed to create the user");
+  if (!response.ok) {
+    if (response.statusText === "Conflict") {
+      alert("Username already in use!");
     }
 
-    return response.json();
+    throw new Error("Failed to create the user");
+  }
+
+  return response.json();
 }
 
 export async function fetchUserFromSession(): Promise<User> {
-    const response = await fetch("http://localhost:8080/user/current", {
-        method: "GET",
-        credentials: 'include'
-    });
+  const response = await fetch("http://localhost:8080/user/current", {
+    method: "GET",
+    credentials: "include",
+  });
 
-    if (!response.ok) {
-        throw new Error("Failed to get the user based on session_id");
-    }
+  if (!response.ok) {
+    throw new Error("Failed to get the user based on session_id");
+  }
 
-    return response.json();
+  return response.json();
 }
 
 export async function fetchUserFromId(userId: number) {
-    const response = await fetch("http://localhost:8080/user/" + userId);
-    if (!response.ok) {
-        throw new Error("Network response was not ok");
-    }
-    return response.json();
+  const response = await fetch("http://localhost:8080/user/" + userId);
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
 }
 
 export async function logout(userId: number, onLogout: () => void) {
-    const response = await fetch("http://localhost:8080/user/logout/" + userId, {
-        method: 'GET',
-        credentials: 'include' 
-    });
-    if (!response.ok) {
-        throw new Error("Network response was not ok");
-    }
-    
-    onLogout();
+  const response = await fetch("http://localhost:8080/user/logout/" + userId, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
 
-    return response.text();
+  onLogout();
+
+  return response.text();
 }
+

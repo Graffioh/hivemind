@@ -15,7 +15,7 @@ type Comments struct {
 	repo *repository.CommentRepository
 }
 
-func NewComments(repo *repository.CommentRepository) *Comments {
+func NewCommentHandler(repo *repository.CommentRepository) *Comments {
 	return &Comments{repo: repo}
 }
 

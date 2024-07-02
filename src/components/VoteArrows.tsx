@@ -22,6 +22,9 @@ export default function VoteArrows({
     {
       queryKey: ["current_user"],
       queryFn: () => fetchUserFromSession(),
+      retry: false,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
     },
   );
 
