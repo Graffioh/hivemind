@@ -30,38 +30,36 @@ func (e *DuplicateReactionError) Error() string {
 
 func (r *ReactionRepository) GetPostReactionsCount(post_id int) (*models.ReactionCounts, error) {
 	var counts models.ReactionCounts
-
-	row := r.db.QueryRow("SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND reaction_type = 'post' AND reaction = 1;", post_id)
-	if err := row.Scan(&counts.Upvotes); err != nil {
-		log.Printf("Error querying upvotes: %v", err)
+	query := `
+		SELECT 
+			SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
+			SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
+		FROM reactions 
+		WHERE post_id = $1 AND reaction_type = 'post'
+	`
+	err := r.db.QueryRow(query, post_id).Scan(&counts.Upvotes, &counts.Downvotes)
+	if err != nil {
+		log.Printf("Error querying post reaction counts: %v", err)
 		return nil, err
 	}
-
-	row = r.db.QueryRow("SELECT COUNT(*) FROM reactions WHERE post_id = $1 AND reaction_type = 'post' AND reaction = -1;", post_id)
-	if err := row.Scan(&counts.Downvotes); err != nil {
-		log.Printf("Error querying downvotes: %v", err)
-		return nil, err
-	}
-
 	return &counts, nil
 }
 
 func (r *ReactionRepository) GetCommentReactionsCount(comment_id int) (*models.ReactionCounts, error) {
-	var counts models.ReactionCounts
-
-	row := r.db.QueryRow("SELECT COUNT(*) FROM reactions WHERE comment_id = $1 AND reaction_type = 'comment' AND reaction = 1;", comment_id)
-	if err := row.Scan(&counts.Upvotes); err != nil {
-		log.Printf("Error querying upvotes: %v", err)
+	var reaction_counts models.ReactionCounts
+	query := `
+		SELECT 
+			SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
+			SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
+		FROM reactions 
+		WHERE comment_id = $1 AND reaction_type = 'comment'
+	`
+	err := r.db.QueryRow(query, comment_id).Scan(&reaction_counts.Upvotes, &reaction_counts.Downvotes)
+	if err != nil {
+		log.Printf("Error querying reaction counts: %v", err)
 		return nil, err
 	}
-
-	row = r.db.QueryRow("SELECT COUNT(*) FROM reactions WHERE comment_id = $1 AND reaction_type = 'comment' AND reaction = -1;", comment_id)
-	if err := row.Scan(&counts.Downvotes); err != nil {
-		log.Printf("Error querying downvotes: %v", err)
-		return nil, err
-	}
-
-	return &counts, nil
+	return &reaction_counts, nil
 }
 
 func (r *ReactionRepository) GetUserReactionToPost(post_id int, user_id int) (*int, error) {
@@ -94,6 +92,54 @@ func (r *ReactionRepository) GetUserReactionToComment(comment_id int, user_id in
 	}
 
 	return reaction_value, nil
+}
+
+func (r *ReactionRepository) UpdatePostReactionsCount(reaction models.Reaction) error {
+	query := `
+        WITH reaction_counts AS (
+            SELECT 
+                SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
+                SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
+            FROM reactions 
+            WHERE post_id = $1 AND reaction_type = 'post'
+        )
+        UPDATE posts p
+        SET up_vote = rc.upvotes, down_vote = rc.downvotes
+        FROM reaction_counts rc
+        WHERE p.id = $1
+    `
+
+	_, err := r.db.Exec(query, reaction.PostID)
+	if err != nil {
+		log.Printf("Error updating post reaction counts: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReactionRepository) UpdateCommentReactionsCount(reaction models.Reaction) error {
+	query := `
+        WITH reaction_counts AS (
+            SELECT 
+                SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
+                SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
+            FROM reactions 
+            WHERE comment_id = $1 AND reaction_type = 'comment'
+        )
+        UPDATE comments c
+        SET up_vote = rc.upvotes, down_vote = rc.downvotes
+        FROM reaction_counts rc
+        WHERE c.id = $1
+    `
+
+	_, err := r.db.Exec(query, reaction.CommentID)
+	if err != nil {
+		log.Printf("Error updating reaction counts: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *ReactionRepository) CreateReaction(reaction models.Reaction) (*models.Reaction, error) {
@@ -165,6 +211,22 @@ func (r *ReactionRepository) CreateReaction(reaction models.Reaction) (*models.R
 	default:
 		// Other errors
 		return nil, err
+	}
+
+	if reaction.ReactionType == "post" {
+		err = r.UpdatePostReactionsCount(reaction)
+
+		if err != nil {
+			log.Printf("Error updating post reactions count: %v", err)
+			return nil, err
+		}
+	} else {
+		err = r.UpdateCommentReactionsCount(reaction)
+
+		if err != nil {
+			log.Printf("Error updating comment reactions count: %v", err)
+			return nil, err
+		}
 	}
 
 	return &reaction, nil
