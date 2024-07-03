@@ -48,7 +48,7 @@ func (r *PostRepository) GetPostsWithPagination(page int, sort string) ([]*model
 		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET $1;"
 	}
 
-	rows, err := r.db.Query(query, page*5)
+	rows, err := r.db.Query(query, page*10)
 	if err != nil {
 		log.Printf("Error querying posts: %v", err)
 		return nil, err
