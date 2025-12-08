@@ -2,6 +2,12 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 const API_BASE_URL = "http://localhost:8080";
+const userDataSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  password: z.string().optional()
+  // May or may not be included in response
+});
 const userTool = createTool({
   id: "user-tool",
   description: "Get the current logged-in user information from the session. Requires sessionId to be provided.",
@@ -11,10 +17,7 @@ const userTool = createTool({
   }),
   outputSchema: z.object({
     success: z.boolean(),
-    data: z.object({
-      id: z.number(),
-      username: z.string()
-    }).optional(),
+    data: userDataSchema.optional(),
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
@@ -44,7 +47,8 @@ const userTool = createTool({
           }
           throw new Error(`Failed to fetch current user: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = userDataSchema.parse(dataRaw);
         return { success: true, data };
       }
       return {

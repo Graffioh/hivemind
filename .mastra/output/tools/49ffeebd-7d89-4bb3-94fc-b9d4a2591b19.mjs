@@ -2,13 +2,29 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 const API_BASE_URL = "http://localhost:8080";
+const postSchema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  title: z.string(),
+  content: z.string(),
+  created_at: z.string(),
+  // API returns as string, can be converted to Date if needed
+  up_vote: z.number().optional(),
+  down_vote: z.number().optional()
+});
+const userSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  password: z.string().optional()
+  // May or may not be included in response
+});
 const inputSchema = z.object({
   action: z.enum(["create", "fetch", "fetchPaginated"]).describe("The action to perform"),
   postId: z.string().optional().describe("Post ID (required for fetch action)"),
   title: z.string().optional().describe("Post title (required for create action)"),
   content: z.string().optional().describe("Post content (required for create action)"),
   userId: z.number().optional().describe("User ID (required for create action, or use sessionId to auto-fetch)"),
-  sessionId: z.string().optional().describe("Session ID cookie value (can be used to fetch userId automatically)"),
+  sessionId: z.string().optional().describe("Session ID (can be used to fetch userId automatically)"),
   page: z.number().optional().describe("Page number for pagination (default: 1)"),
   sort: z.string().optional().describe("Sorting method (default: 'newest')")
 });
@@ -18,18 +34,17 @@ const postTool = createTool({
   inputSchema,
   outputSchema: z.object({
     success: z.boolean(),
-    data: z.any().optional(),
+    data: z.union([
+      postSchema,
+      // Single post (create/fetch response)
+      z.array(postSchema)
+      // Array of posts (fetchPaginated response)
+    ]).optional(),
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
-    let { action, postId, title, content, userId, sessionId, page = 1, sort = "newest" } = context;
-    if (!sessionId && typeof document !== "undefined") {
-      const cookies = document.cookie.split(";");
-      const sessionCookie = cookies.find((c) => c.trim().startsWith("session_id="));
-      if (sessionCookie) {
-        sessionId = sessionCookie.split("=")[1].trim();
-      }
-    }
+    const { action, postId, title, content, page = 1, sort = "newest" } = context;
+    let { userId, sessionId } = context;
     try {
       if (action === "create") {
         if (!userId && sessionId) {
@@ -40,7 +55,8 @@ const postTool = createTool({
             }
           });
           if (userResponse.ok) {
-            const userData = await userResponse.json();
+            const userDataRaw = await userResponse.json();
+            const userData = userSchema.parse(userDataRaw);
             userId = userData.id;
           } else {
             return {
@@ -69,7 +85,8 @@ const postTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to create post: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = postSchema.parse(dataRaw);
         return { success: true, data };
       }
       if (action === "fetch") {
@@ -83,7 +100,8 @@ const postTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to fetch post: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = postSchema.parse(dataRaw);
         return { success: true, data };
       }
       if (action === "fetchPaginated") {
@@ -93,7 +111,8 @@ const postTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to fetch posts: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = z.array(postSchema).parse(dataRaw);
         return { success: true, data };
       }
       return {
