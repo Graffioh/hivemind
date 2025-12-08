@@ -21,16 +21,18 @@ import {
 import VoteArrows from "../components/VoteArrows";
 import HivemindSVG from "../assets/hivemind-logo-hd.svg?react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import ChatWidget from "../components/ChatWidget";
 
 export default function HomePage() {
   const queryClient = useQueryClient();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const {
     data: currentUser,
     isLoading,
     isError,
-  } = useQuery<User>({
+  } = useQuery<User | null>({
     queryKey: ["current_user"],
     queryFn: () => fetchUserFromSession(),
     retry: false,
@@ -43,6 +45,7 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["current_user"] });
       queryClient.removeQueries({ queryKey: ["current_user"] });
       setIsLoggedIn(false);
+      setIsChatOpen(false);
     });
   }
 
@@ -78,12 +81,20 @@ export default function HomePage() {
                   </span>
                   , <br /> Start posting and enter the hive!
                 </div>
-                <button
-                  onClick={() => handleLogout(currentUser!.id)}
-                  className="text-sm bg-transparent text-stone-400 hover:text-neutral-500 hover:bg-transparent w-fit"
-                >
-                  log out
-                </button>
+                <div className="flex gap-4 mt-2">
+                  <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="text-sm bg-transparent text-yellow-500 hover:text-yellow-400 hover:bg-transparent w-fit"
+                  >
+                    💬 Chat with Agent
+                  </button>
+                  <button
+                    onClick={() => handleLogout(currentUser!.id)}
+                    className="text-sm bg-transparent text-stone-400 hover:text-neutral-500 hover:bg-transparent w-fit"
+                  >
+                    log out
+                  </button>
+                </div>
               </div>
               <PostForm
                 queryClient={queryClient}
@@ -97,6 +108,10 @@ export default function HomePage() {
           <ThoughtsBoard sorting={sorting} handleSorting={handleSorting} />
         </div>
       </div>
+      <ChatWidget
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </>
   );
 }
@@ -236,9 +251,11 @@ function ThoughtsBoard({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data.pages.map((page: any) => (
           <div key={page.currentPage} className="flex flex-col gap-2 w-full">
-            {page.data.map((post: Post) => (
-              <PostSection key={post.id} post={post} />
-            ))}
+            {page.data && page.data.length > 0 ? (
+              page.data.map((post: Post) => (
+                <PostSection key={post.id} post={post} />
+              ))
+            ) : null}
           </div>
         ))
       ) : (

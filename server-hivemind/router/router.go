@@ -26,6 +26,7 @@ func NewRouter(db *sql.DB) http.Handler {
 	rh := handlers.NewReactionHandler(rr)
 
 	router.HandleFunc("/user/current", uh.GetCurrentUser).Methods("GET")
+	router.HandleFunc("/user/session-id", uh.GetSessionId).Methods("GET")
 	router.HandleFunc("/user/{id:[0-9]+}", uh.GetUserById).Methods("GET")
 	router.HandleFunc("/user", uh.CreateOrLoginUser).Methods("POST")
 	router.HandleFunc("/user/logout/{id:[0-9]+}", uh.DeleteSession).Methods("GET")
@@ -46,10 +47,11 @@ func NewRouter(db *sql.DB) http.Handler {
 	router.HandleFunc("/reaction", rh.CreateReaction).Methods("POST")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:3000"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "Cookie", "X-Session-ID"},
 		AllowCredentials: true,
+		Debug:            false, // Disable CORS debugging
 	})
 
 	return c.Handler(router)

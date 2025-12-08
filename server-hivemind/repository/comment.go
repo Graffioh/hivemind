@@ -15,7 +15,7 @@ func NewCommentRepository(db *sql.DB) *CommentRepository {
 }
 
 func (r *CommentRepository) GetComments(post_id int) ([]*models.Comment, error) {
-	rows, err := r.db.Query("SELECT id, post_id, user_id, content, created_at, up_vote, down_vote FROM comments WHERE post_id = $1", post_id)
+	rows, err := r.db.Query("SELECT id, post_id, user_id, content, created_at, up_vote, down_vote FROM comments WHERE post_id = ?1", post_id)
 	if err != nil {
 		log.Printf("Error querying comments: %v", err)
 		return nil, err
@@ -37,7 +37,7 @@ func (r *CommentRepository) GetComments(post_id int) ([]*models.Comment, error) 
 }
 
 func (r *CommentRepository) CreateComment(comment models.Comment) (*models.Comment, error) {
-	stmt, err := r.db.Prepare("INSERT INTO comments(post_id, user_id, content, created_at) VALUES($1, $2, $3, $4) RETURNING id")
+	stmt, err := r.db.Prepare("INSERT INTO comments(post_id, user_id, content, created_at) VALUES(?1, ?2, ?3, ?4) RETURNING id")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return nil, err

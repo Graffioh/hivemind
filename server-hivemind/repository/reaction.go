@@ -35,7 +35,7 @@ func (r *ReactionRepository) GetPostReactionsCount(post_id int) (*models.Reactio
 			COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) as upvotes,
 			COALESCE(SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END), 0) as downvotes
 		FROM reactions 
-		WHERE post_id = $1 AND reaction_type = 'post'
+		WHERE post_id = ?1 AND reaction_type = 'post'
 	`
 	err := r.db.QueryRow(query, post_id).Scan(&counts.Upvotes, &counts.Downvotes)
 	if err != nil {
@@ -52,7 +52,7 @@ func (r *ReactionRepository) GetCommentReactionsCount(comment_id int) (*models.R
 			COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) as upvotes,
 			COALESCE(SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END), 0) as downvotes
 		FROM reactions 
-		WHERE comment_id = $1 AND reaction_type = 'comment'
+		WHERE comment_id = ?1 AND reaction_type = 'comment'
 	`
 	err := r.db.QueryRow(query, comment_id).Scan(&reaction_counts.Upvotes, &reaction_counts.Downvotes)
 	if err != nil {
@@ -65,7 +65,7 @@ func (r *ReactionRepository) GetCommentReactionsCount(comment_id int) (*models.R
 func (r *ReactionRepository) GetUserReactionToPost(post_id int, user_id int) (*int, error) {
 	var reaction_value *int
 
-	row := r.db.QueryRow("SELECT reaction FROM reactions WHERE post_id = $1 AND user_id = $2 AND reaction_type = 'post';", post_id, user_id)
+	row := r.db.QueryRow("SELECT reaction FROM reactions WHERE post_id = ?1 AND user_id = ?2 AND reaction_type = 'post';", post_id, user_id)
 	err := row.Scan(&reaction_value)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -81,7 +81,7 @@ func (r *ReactionRepository) GetUserReactionToPost(post_id int, user_id int) (*i
 func (r *ReactionRepository) GetUserReactionToComment(comment_id int, user_id int) (*int, error) {
 	var reaction_value *int
 
-	row := r.db.QueryRow("SELECT reaction FROM reactions WHERE comment_id = $1 AND user_id = $2 AND reaction_type = 'comment';", comment_id, user_id)
+	row := r.db.QueryRow("SELECT reaction FROM reactions WHERE comment_id = ?1 AND user_id = ?2 AND reaction_type = 'comment';", comment_id, user_id)
 	err := row.Scan(&reaction_value)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -96,17 +96,11 @@ func (r *ReactionRepository) GetUserReactionToComment(comment_id int, user_id in
 
 func (r *ReactionRepository) UpdatePostReactionsCount(reaction models.Reaction) error {
 	query := `
-        WITH reaction_counts AS (
-            SELECT 
-                SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
-                SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
-            FROM reactions 
-            WHERE post_id = $1 AND reaction_type = 'post'
-        )
-        UPDATE posts p
-        SET up_vote = rc.upvotes, down_vote = rc.downvotes
-        FROM reaction_counts rc
-        WHERE p.id = $1
+        UPDATE posts
+        SET 
+            up_vote = (SELECT COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) FROM reactions WHERE post_id = ?1 AND reaction_type = 'post'),
+            down_vote = (SELECT COALESCE(SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END), 0) FROM reactions WHERE post_id = ?1 AND reaction_type = 'post')
+        WHERE id = ?1
     `
 
 	_, err := r.db.Exec(query, reaction.PostID)
@@ -120,17 +114,11 @@ func (r *ReactionRepository) UpdatePostReactionsCount(reaction models.Reaction) 
 
 func (r *ReactionRepository) UpdateCommentReactionsCount(reaction models.Reaction) error {
 	query := `
-        WITH reaction_counts AS (
-            SELECT 
-                SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END) as upvotes,
-                SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END) as downvotes
-            FROM reactions 
-            WHERE comment_id = $1 AND reaction_type = 'comment'
-        )
-        UPDATE comments c
-        SET up_vote = rc.upvotes, down_vote = rc.downvotes
-        FROM reaction_counts rc
-        WHERE c.id = $1
+        UPDATE comments
+        SET 
+            up_vote = (SELECT COALESCE(SUM(CASE WHEN reaction = 1 THEN 1 ELSE 0 END), 0) FROM reactions WHERE comment_id = ?1 AND reaction_type = 'comment'),
+            down_vote = (SELECT COALESCE(SUM(CASE WHEN reaction = -1 THEN 1 ELSE 0 END), 0) FROM reactions WHERE comment_id = ?1 AND reaction_type = 'comment')
+        WHERE id = ?1
     `
 
 	_, err := r.db.Exec(query, reaction.CommentID)
@@ -148,7 +136,7 @@ func (r *ReactionRepository) CreateReaction(reaction models.Reaction) (*models.R
 
 	// Check if a reaction from the user already exists for the given post or comment
 	err = r.db.QueryRow(
-		"SELECT id, reaction FROM reactions WHERE user_id = $1 AND (post_id = $2 OR comment_id = $3)",
+		"SELECT id, reaction FROM reactions WHERE user_id = ?1 AND (post_id = ?2 OR comment_id = ?3)",
 		reaction.UserID, reaction.PostID, reaction.CommentID,
 	).Scan(&existingReaction.ID, &existingReaction.ReactionValue)
 
@@ -157,7 +145,7 @@ func (r *ReactionRepository) CreateReaction(reaction models.Reaction) (*models.R
 		// No existing reaction found, insert a new one
 		stmt, err := r.db.Prepare(
 			"INSERT INTO reactions(user_id, post_id, comment_id, reaction_type, reaction, created_at) " +
-				"VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
+				"VALUES(?1, ?2, ?3, ?4, ?5, ?6) RETURNING id",
 		)
 		if err != nil {
 			log.Printf("Error preparing statement: %v", err)
@@ -192,7 +180,7 @@ func (r *ReactionRepository) CreateReaction(reaction models.Reaction) (*models.R
 
 		// Update the existing reaction
 		stmt, err := r.db.Prepare(
-			"UPDATE reactions SET reaction = $1 WHERE id = $2",
+			"UPDATE reactions SET reaction = ?1 WHERE id = ?2",
 		)
 		if err != nil {
 			log.Printf("Error preparing update statement: %v", err)

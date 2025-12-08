@@ -15,5 +15,11 @@ func LoadEnv() {
 }
 
 func GetDBConnectionString() string {
-	return os.Getenv("DB_CONNECTION_STRING")
+	// Turso connection string format: libsql://<database-name>.<org-name>.turso.io?authToken=<token>
+	// For local file: file:///path/to/database.db or file:./database.db
+	connStr := os.Getenv("TURSO_DATABASE_URL")
+	if connStr == "" {
+		log.Fatalf("TURSO_DATABASE_URL environment variable is not set. Please set it to a valid libSQL connection string.")
+	}
+	return connStr
 }

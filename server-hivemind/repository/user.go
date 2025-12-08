@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"server-hivemind/models"
 	"server-hivemind/utils"
-
-	"github.com/lib/pq"
 )
 
 type UserRepository struct {
@@ -44,7 +43,7 @@ func (u *UserRepository) GetUsers() ([]*models.User, error) {
 func (u *UserRepository) GetUserById(user_id int64) (*models.User, error) {
 	var user models.User
 
-	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", user_id).Scan(&user.ID, &user.Username, &user.Password)
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE id = ?1", user_id).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		log.Printf("Error querying user by id: %v", err)
 		return nil, err
@@ -56,7 +55,7 @@ func (u *UserRepository) GetUserById(user_id int64) (*models.User, error) {
 func (u *UserRepository) GetUserByUsernameAndPassword(username string, password string) (*models.User, error) {
 	var user models.User
 
-	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE username = $1", username).Scan(&user.ID, &user.Username, &user.Password)
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE username = ?1", username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		log.Printf("Error querying, user does not exist: %v", err)
 		return nil, err
@@ -77,7 +76,7 @@ func (u *UserRepository) GetUserByUsernameAndPassword(username string, password 
 func (u *UserRepository) GetUserByPost(user_id int64) (*models.User, error) {
 	var user models.User
 
-	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE id = $1", user_id).Scan(&user.ID, &user.Username, &user.Password)
+	err := u.db.QueryRow("SELECT id, username, password FROM users WHERE id = ?1", user_id).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		log.Printf("Error querying user by post user_id: %v", err)
 		return nil, err
@@ -100,7 +99,7 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 		return nil, "", 0, err
 	}
 
-	stmt, err := tx.Prepare("INSERT INTO users(id, username, password) VALUES($1, $2, $3) RETURNING id")
+	stmt, err := tx.Prepare("INSERT INTO users(id, username, password) VALUES(?1, ?2, ?3) RETURNING id")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return nil, "", 0, err
@@ -109,10 +108,10 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 
 	err = stmt.QueryRow(user.ID, user.Username, encoded_hash_pw).Scan(&user.ID)
 	if err != nil {
-		if pg_err, ok := err.(*pq.Error); ok {
-			if pg_err.Code == "23505" {
-				return nil, "", 0, errors.New("username already in use")
-			}
+		// SQLite returns "UNIQUE constraint failed" error for duplicate entries
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "UNIQUE constraint") || strings.Contains(errMsg, "duplicate") {
+			return nil, "", 0, errors.New("username already in use")
 		}
 		log.Printf("Error executing statement: %v", err)
 		return nil, "", 0, err
@@ -124,7 +123,7 @@ func (u *UserRepository) CreateUser(user models.User) (*models.User, string, int
 		UserID:    user.ID,
 	}
 
-	stmt, err = tx.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
+	stmt, err = tx.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES(?1, ?2, ?3)")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return nil, "", 0, err
@@ -151,7 +150,7 @@ func (u *UserRepository) CreateLoginSession(user_id int64) (string, int, error) 
 		UserID:    user_id,
 	}
 
-	stmt, err := u.db.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
+	stmt, err := u.db.Prepare("INSERT INTO sessions(token, expires_at, user_id) VALUES(?1, ?2, ?3)")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return "", 0, err
@@ -167,7 +166,7 @@ func (u *UserRepository) CreateLoginSession(user_id int64) (string, int, error) 
 }
 
 func (u *UserRepository) DeleteSession(user_id int64) (int64, error) {
-	stmt, err := u.db.Prepare("DELETE FROM sessions WHERE user_id = $1")
+	stmt, err := u.db.Prepare("DELETE FROM sessions WHERE user_id = ?1")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return 0, err

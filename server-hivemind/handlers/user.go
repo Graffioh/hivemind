@@ -22,23 +22,27 @@ func NewUserHandler(repo *repository.UserRepository) *Users {
 }
 
 func (u *Users) GetCurrentUser(rw http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		http.Error(rw, "Session not found in cookies", http.StatusBadRequest)
-		return
+	var sid string
+	
+	// Try to get sessionId from X-Session-ID header first (for server-side requests)
+	sid = r.Header.Get("X-Session-ID")
+	if sid == "" {
+		// Fallback to cookie (for browser requests)
+		cookie, cookieErr := r.Cookie("session_id")
+		if cookieErr != nil {
+			http.Error(rw, "Session not found in cookies or headers", http.StatusBadRequest)
+			return
+		}
+		sid = cookie.Value
 	}
 
-	sid := cookie.Value
-
 	s, err := utils.ValidateSession(sid)
-
 	if err != nil {
 		http.Error(rw, "Session not valid", http.StatusBadRequest)
 		return
 	}
 
 	user, err := u.repo.GetUserById(s.UserID)
-
 	if err != nil {
 		http.Error(rw, "No user found", http.StatusBadRequest)
 		return
@@ -46,6 +50,33 @@ func (u *Users) GetCurrentUser(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	utils.ToJSON(rw, user)
+}
+
+func (u *Users) GetSessionId(rw http.ResponseWriter, r *http.Request) {
+	var sid string
+	
+	// Try to get sessionId from X-Session-ID header first (for server-side requests)
+	sid = r.Header.Get("X-Session-ID")
+	if sid == "" {
+		// Fallback to cookie (for browser requests)
+		cookie, cookieErr := r.Cookie("session_id")
+		if cookieErr != nil {
+			http.Error(rw, "Session not found", http.StatusBadRequest)
+			return
+		}
+		sid = cookie.Value
+	}
+
+	// Validate the session exists
+	_, err := utils.ValidateSession(sid)
+	if err != nil {
+		http.Error(rw, "Session not valid", http.StatusBadRequest)
+		return
+	}
+
+	// Return the sessionId
+	rw.Header().Set("Content-Type", "application/json")
+	utils.ToJSON(rw, map[string]string{"sessionId": sid})
 }
 
 func (u *Users) GetUserById(rw http.ResponseWriter, r *http.Request) {
@@ -109,6 +140,7 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 			MaxAge:   token_exp * 24 * 60 * 60,
 			SameSite: http.SameSiteLaxMode,
 			Path:     "/",
+			Domain:   "", // Empty domain allows localhost with different ports
 		}
 		http.SetCookie(rw, cookie)
 
@@ -133,6 +165,7 @@ func (u *Users) CreateOrLoginUser(rw http.ResponseWriter, r *http.Request) {
 		MaxAge:   token_exp * 24 * 60 * 60,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
+		Domain:   "", // Empty domain allows localhost with different ports
 	}
 	http.SetCookie(rw, cookie)
 

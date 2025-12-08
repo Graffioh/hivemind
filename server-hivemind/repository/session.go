@@ -20,7 +20,7 @@ func (s *SessionRepository) GetSession(session_id string) (*models.Session, erro
 
 	var session models.Session
 
-	err := db.QueryRow("SELECT token, expires_at, user_id FROM session WHERE token = $1;", session_id).Scan(&session.Token, &session.ExpiresAt, &session.UserID)
+	err := db.QueryRow("SELECT token, expires_at, user_id FROM sessions WHERE token = ?1;", session_id).Scan(&session.Token, &session.ExpiresAt, &session.UserID)
 	if err != nil {
 		log.Printf("Error querying session: %v", err)
 		return nil, err

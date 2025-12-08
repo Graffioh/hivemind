@@ -18,13 +18,17 @@ export async function createUser(newUser: User): Promise<User> {
   return response.json();
 }
 
-export async function fetchUserFromSession(): Promise<User> {
+export async function fetchUserFromSession(): Promise<User | null> {
   const response = await fetch("http://localhost:8080/user/current", {
     method: "GET",
     credentials: "include",
   });
 
   if (!response.ok) {
+    // 400 means no session (user not logged in) - this is expected
+    if (response.status === 400) {
+      return null;
+    }
     throw new Error("Failed to get the user based on session_id");
   }
 
@@ -37,6 +41,23 @@ export async function fetchUserFromId(userId: number) {
     throw new Error("Network response was not ok");
   }
   return response.json();
+}
+
+export async function getSessionId(): Promise<string | null> {
+  const response = await fetch("http://localhost:8080/user/session-id", {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    if (response.status === 400) {
+      return null; // No session
+    }
+    throw new Error("Failed to get session ID");
+  }
+
+  const data = await response.json();
+  return data.sessionId;
 }
 
 export async function logout(userId: number, onLogout: () => void) {

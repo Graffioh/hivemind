@@ -41,11 +41,11 @@ func (r *PostRepository) GetPostsWithPagination(page int, sort string) ([]*model
 
 	// thanks claude 3.5 sonnet
 	if sort == "CONTROVERSIAL" {
-		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY ABS(SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) - SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END)) DESC LIMIT 10 OFFSET $1;"
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY ABS(SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) - SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END)) DESC LIMIT 10 OFFSET ?1;"
 	} else if sort == "UNPOPULAR" {
-		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET $1;"
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET ?1;"
 	} else {
-		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET $1;"
+		query = "SELECT p.id, p.user_id, p.title, p.content, p.created_at, SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) AS up_vote, SUM(CASE WHEN r.reaction = -1 THEN 1 ELSE 0 END) AS down_vote FROM posts p LEFT JOIN reactions r ON p.id = r.post_id GROUP BY p.id ORDER BY SUM(CASE WHEN r.reaction = 1 THEN 1 ELSE 0 END) DESC LIMIT 10 OFFSET ?1;"
 	}
 
 	rows, err := r.db.Query(query, page*10)
@@ -82,7 +82,7 @@ func (r *PostRepository) GetTotalPostsCount() (*int, error) {
 
 func (r *PostRepository) GetPost(id int) (*models.Post, error) {
 	var post models.Post
-	err := r.db.QueryRow("SELECT id, user_id, title, content, created_at, up_vote, down_vote FROM posts WHERE id = $1", id).
+	err := r.db.QueryRow("SELECT id, user_id, title, content, created_at, up_vote, down_vote FROM posts WHERE id = ?1", id).
 		Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.CreatedAt, &post.UpVote, &post.DownVote)
 	if err != nil {
 		log.Printf("Error querying post: %v", err)
@@ -93,7 +93,7 @@ func (r *PostRepository) GetPost(id int) (*models.Post, error) {
 }
 
 func (r *PostRepository) CreatePost(post models.Post) (*models.Post, error) {
-	stmt, err := r.db.Prepare("INSERT INTO posts(user_id, title, content, created_at) VALUES($1, $2, $3, $4) RETURNING id")
+	stmt, err := r.db.Prepare("INSERT INTO posts(user_id, title, content, created_at) VALUES(?1, ?2, ?3, ?4) RETURNING id")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
 		return nil, err
