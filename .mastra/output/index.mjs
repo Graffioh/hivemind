@@ -4,10 +4,12 @@ import { TABLE_EVALS } from '@mastra/core/storage';
 import { scoreTraces, scoreTracesWorkflow } from '@mastra/core/scores/scoreTraces';
 import { generateEmptyFromSchema, checkEvalStorageFields } from '@mastra/core/utils';
 import { Mastra } from '@mastra/core/mastra';
+import { LibSQLStore } from '@mastra/libsql';
 import { Agent, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList, convertMessages } from '@mastra/core/agent';
-import { postTool } from './tools/49ffeebd-7d89-4bb3-94fc-b9d4a2591b19.mjs';
-import { commentTool } from './tools/67aec124-22df-4476-b0f3-7a416740249f.mjs';
-import { userTool } from './tools/f4b97cda-293a-4d61-b8bb-afcedecb5013.mjs';
+import { Memory as Memory$1 } from '@mastra/memory';
+import { postTool } from './tools/ea61abcb-aee5-42c9-badf-e19d47069591.mjs';
+import { commentTool } from './tools/d79bcb8d-53e7-4d5b-be11-b0097658a80c.mjs';
+import { userTool } from './tools/23716fbe-b977-4958-bb34-ceff2061bf38.mjs';
 import crypto$1, { randomUUID } from 'crypto';
 import { readdir, readFile, mkdtemp, rm, writeFile, mkdir, copyFile, stat } from 'fs/promises';
 import * as https from 'https';
@@ -60,13 +62,24 @@ const hivemindAgent = new Agent({
     - When fetching posts, you can use pagination with page numbers and sorting options (newest, oldest, etc.)
   `,
   model: "google/gemini-flash-lite-latest",
-  tools: { postTool, commentTool, userTool }
+  tools: { postTool, commentTool, userTool },
+  memory: new Memory$1({
+    storage: new LibSQLStore({
+      url: ":memory:"
+    }),
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 const mastra = new Mastra({
   agents: {
     hivemindAgent
-  }
+  },
+  storage: new LibSQLStore({
+    url: ":memory:"
+  })
 });
 
 // src/utils/mime.ts

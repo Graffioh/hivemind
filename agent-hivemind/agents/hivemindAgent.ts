@@ -1,4 +1,6 @@
 import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { LibSQLStore } from "@mastra/libsql";
 import { postTool } from "../tools/postTool";
 import { commentTool } from "../tools/commentTool";
 import { userTool } from "../tools/userTool";
@@ -23,5 +25,13 @@ export const hivemindAgent = new Agent({
   `,
   model: "google/gemini-flash-lite-latest",
   tools: { postTool, commentTool, userTool },
+  memory: new Memory({
+    storage: new LibSQLStore({
+      url: ":memory:",
+    }),
+    options: {
+      lastMessages: 20,
+    },
+  }),
 });
 

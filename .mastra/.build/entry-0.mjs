@@ -5,13 +5,29 @@ import { z } from 'zod';
 
 "use strict";
 const API_BASE_URL$2 = "http://localhost:8080";
+const postSchema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  title: z.string(),
+  content: z.string(),
+  created_at: z.string(),
+  // API returns as string, can be converted to Date if needed
+  up_vote: z.number().optional(),
+  down_vote: z.number().optional()
+});
+const userSchema$1 = z.object({
+  id: z.number(),
+  username: z.string(),
+  password: z.string().optional()
+  // May or may not be included in response
+});
 const inputSchema$1 = z.object({
   action: z.enum(["create", "fetch", "fetchPaginated"]).describe("The action to perform"),
   postId: z.string().optional().describe("Post ID (required for fetch action)"),
   title: z.string().optional().describe("Post title (required for create action)"),
   content: z.string().optional().describe("Post content (required for create action)"),
   userId: z.number().optional().describe("User ID (required for create action, or use sessionId to auto-fetch)"),
-  sessionId: z.string().optional().describe("Session ID cookie value (can be used to fetch userId automatically)"),
+  sessionId: z.string().optional().describe("Session ID (can be used to fetch userId automatically)"),
   page: z.number().optional().describe("Page number for pagination (default: 1)"),
   sort: z.string().optional().describe("Sorting method (default: 'newest')")
 });
@@ -21,18 +37,17 @@ const postTool = createTool({
   inputSchema: inputSchema$1,
   outputSchema: z.object({
     success: z.boolean(),
-    data: z.any().optional(),
+    data: z.union([
+      postSchema,
+      // Single post (create/fetch response)
+      z.array(postSchema)
+      // Array of posts (fetchPaginated response)
+    ]).optional(),
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
-    let { action, postId, title, content, userId, sessionId, page = 1, sort = "newest" } = context;
-    if (!sessionId && typeof document !== "undefined") {
-      const cookies = document.cookie.split(";");
-      const sessionCookie = cookies.find((c) => c.trim().startsWith("session_id="));
-      if (sessionCookie) {
-        sessionId = sessionCookie.split("=")[1].trim();
-      }
-    }
+    const { action, postId, title, content, page = 1, sort = "newest" } = context;
+    let { userId, sessionId } = context;
     try {
       if (action === "create") {
         if (!userId && sessionId) {
@@ -43,7 +58,8 @@ const postTool = createTool({
             }
           });
           if (userResponse.ok) {
-            const userData = await userResponse.json();
+            const userDataRaw = await userResponse.json();
+            const userData = userSchema$1.parse(userDataRaw);
             userId = userData.id;
           } else {
             return {
@@ -72,7 +88,8 @@ const postTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to create post: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = postSchema.parse(dataRaw);
         return { success: true, data };
       }
       if (action === "fetch") {
@@ -86,7 +103,8 @@ const postTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to fetch post: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = postSchema.parse(dataRaw);
         return { success: true, data };
       }
       if (action === "fetchPaginated") {
@@ -96,7 +114,8 @@ const postTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to fetch posts: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = z.array(postSchema).parse(dataRaw);
         return { success: true, data };
       }
       return {
@@ -114,12 +133,28 @@ const postTool = createTool({
 
 "use strict";
 const API_BASE_URL$1 = "http://localhost:8080";
+const commentSchema = z.object({
+  id: z.number(),
+  post_id: z.number(),
+  user_id: z.number(),
+  content: z.string(),
+  created_at: z.string(),
+  // API returns as string, can be converted to Date if needed
+  up_vote: z.number().optional(),
+  down_vote: z.number().optional()
+});
+const userSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  password: z.string().optional()
+  // May or may not be included in response
+});
 const inputSchema = z.object({
   action: z.enum(["create", "fetch"]).describe("The action to perform"),
   postId: z.string().describe("Post ID (required for both actions)"),
   content: z.string().optional().describe("Comment content (required for create action)"),
   userId: z.number().optional().describe("User ID (required for create action, or use sessionId to auto-fetch)"),
-  sessionId: z.string().optional().describe("Session ID cookie value (can be used to fetch userId automatically)")
+  sessionId: z.string().optional().describe("Session ID (can be used to fetch userId automatically)")
 });
 const commentTool = createTool({
   id: "comment-tool",
@@ -127,18 +162,17 @@ const commentTool = createTool({
   inputSchema,
   outputSchema: z.object({
     success: z.boolean(),
-    data: z.any().optional(),
+    data: z.union([
+      commentSchema,
+      // Single comment (create response)
+      z.array(commentSchema)
+      // Array of comments (fetch response)
+    ]).optional(),
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
-    let { action, postId, content, userId, sessionId } = context;
-    if (!sessionId && typeof document !== "undefined") {
-      const cookies = document.cookie.split(";");
-      const sessionCookie = cookies.find((c) => c.trim().startsWith("session_id="));
-      if (sessionCookie) {
-        sessionId = sessionCookie.split("=")[1].trim();
-      }
-    }
+    const { action, postId, content, sessionId } = context;
+    let { userId } = context;
     try {
       if (action === "create") {
         if (!userId && sessionId) {
@@ -149,7 +183,8 @@ const commentTool = createTool({
             }
           });
           if (userResponse.ok) {
-            const userData = await userResponse.json();
+            const userDataRaw = await userResponse.json();
+            const userData = userSchema.parse(userDataRaw);
             userId = userData.id;
           } else {
             return {
@@ -178,7 +213,8 @@ const commentTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to create comment: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = commentSchema.parse(dataRaw);
         return { success: true, data };
       }
       if (action === "fetch") {
@@ -186,7 +222,8 @@ const commentTool = createTool({
         if (!response.ok) {
           throw new Error(`Failed to fetch comments: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = z.array(commentSchema).parse(dataRaw);
         return { success: true, data };
       }
       return {
@@ -204,6 +241,12 @@ const commentTool = createTool({
 
 "use strict";
 const API_BASE_URL = "http://localhost:8080";
+const userDataSchema = z.object({
+  id: z.number(),
+  username: z.string(),
+  password: z.string().optional()
+  // May or may not be included in response
+});
 const userTool = createTool({
   id: "user-tool",
   description: "Get the current logged-in user information from the session. Requires sessionId to be provided.",
@@ -213,10 +256,7 @@ const userTool = createTool({
   }),
   outputSchema: z.object({
     success: z.boolean(),
-    data: z.object({
-      id: z.number(),
-      username: z.string()
-    }).optional(),
+    data: userDataSchema.optional(),
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
@@ -246,7 +286,8 @@ const userTool = createTool({
           }
           throw new Error(`Failed to fetch current user: ${response.statusText}`);
         }
-        const data = await response.json();
+        const dataRaw = await response.json();
+        const data = userDataSchema.parse(dataRaw);
         return { success: true, data };
       }
       return {
@@ -270,19 +311,16 @@ const hivemindAgent = new Agent({
     Your primary functions are to help users:
     - Create and manage posts
     - Create and view comments on posts
-    - Fetch posts with pagination and sorting options
+    - Fetch posts (with pagination and sorting options)
     
     When helping users:
-    - When creating posts or comments, automatically try to get the userId from the current session
-    - The tools will automatically read the sessionId from browser cookies if available
-    - If userId is not available, the tools will automatically fetch it from the session
+    - When creating posts or comments, automatically try to get the userId from the current session using the provided sessionId
     - Use the postTool for all post-related operations (create, fetch, fetchPaginated)
     - Use the commentTool for all comment-related operations (create, fetch)
     - Use the userTool to get current user information if needed
     - Be clear and concise in your responses
     - If an error occurs, explain what went wrong and suggest how to fix it
     - When fetching posts, you can use pagination with page numbers and sorting options (newest, oldest, etc.)
-    - IMPORTANT: The tools automatically handle session authentication when running in browser context
   `,
   model: "google/gemini-flash-lite-latest",
   tools: { postTool, commentTool, userTool }

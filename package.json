@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@mastra/core": "^0.24.6",
-    "@mastra/memory": "^0.0.1",
+    "@mastra/libsql": "^0.16.3",
+    "@mastra/memory": "^0.15.12",
     "@tanstack/react-query": "^5.37.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
