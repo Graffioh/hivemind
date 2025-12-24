@@ -8,9 +8,8 @@ const postSchema = z.object({
   title: z.string(),
   content: z.string(),
   created_at: z.string(),
-  // API returns as string, can be converted to Date if needed
-  up_vote: z.number().optional(),
-  down_vote: z.number().optional()
+  up_vote: z.number(),
+  down_vote: z.number()
 });
 const userSchema = z.object({
   id: z.number(),
@@ -43,8 +42,8 @@ const postTool = createTool({
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
-    const { action, postId, title, content, page = 1, sort = "newest" } = context;
-    let { userId, sessionId } = context;
+    const { action, postId, title, content, page = 1, sort = "newest", sessionId } = context;
+    let { userId } = context;
     try {
       if (action === "create") {
         if (!userId && sessionId) {

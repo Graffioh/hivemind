@@ -47,7 +47,7 @@ func NewRouter(db *sql.DB) http.Handler {
 	router.HandleFunc("/reaction", rh.CreateReaction).Methods("POST")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:3000"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:3000"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
 		AllowedHeaders:   []string{"Content-Type", "Authorization", "Cookie", "X-Session-ID"},
 		AllowCredentials: true,

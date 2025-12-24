@@ -1,10 +1,99 @@
 import { Mastra } from '@mastra/core/mastra';
+import { LibSQLStore } from '@mastra/libsql';
 import { Agent } from '@mastra/core/agent';
+import { Memory } from '@mastra/memory';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
 "use strict";
+var InspectionEventLabel = /* @__PURE__ */ ((InspectionEventLabel2) => {
+  InspectionEventLabel2["Content"] = "Content";
+  InspectionEventLabel2["Reasoning"] = "Reasoning";
+  InspectionEventLabel2["ToolCalls"] = "Tool Calls";
+  InspectionEventLabel2["Custom"] = "Custom";
+  return InspectionEventLabel2;
+})(InspectionEventLabel || {});
+function createHttpInspectionReporter(baseUrl = "http://localhost:6969") {
+  return {
+    async trace(message, children) {
+      console.log("Sending inspection trace:", message);
+      try {
+        const event = children ? { message, children } : { message };
+        const response = await fetch(`${baseUrl}/api/inspection/trace`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event })
+        });
+        if (!response.ok) {
+          console.error(`Failed to send inspection trace: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error("Error sending inspection trace:", error);
+      }
+    },
+    async context(ctx) {
+      console.log("Sending context update:", JSON.stringify(ctx));
+      try {
+        const response = await fetch(`${baseUrl}/api/inspection/context`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ context: ctx })
+        });
+        if (!response.ok) {
+          console.error(`Failed to send context update: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error("Error sending context update:", error);
+      }
+    },
+    async tokens(tokenUsage) {
+      try {
+        const response = await fetch(`${baseUrl}/api/inspection/tokens`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tokenUsage })
+        });
+        if (!response.ok) {
+          console.error(`Failed to send token usage update: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error("Error sending token usage update:", error);
+      }
+    },
+    async tools(toolDefinitions) {
+      try {
+        const response = await fetch(`${baseUrl}/api/inspection/tools`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ toolDefinitions })
+        });
+        if (!response.ok) {
+          console.error(`Failed to send tool definitions: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error("Error sending tool definitions:", error);
+      }
+    },
+    async model(modelName) {
+      try {
+        const response = await fetch(`${baseUrl}/api/inspection/model`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelName })
+        });
+        if (!response.ok) {
+          console.error(`Failed to send model name: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error("Error sending model name:", error);
+      }
+    }
+  };
+}
+
+"use strict";
 const API_BASE_URL$2 = "http://localhost:8080";
+const reporter = createHttpInspectionReporter();
 const postSchema = z.object({
   id: z.number(),
   user_id: z.number(),
@@ -46,8 +135,12 @@ const postTool = createTool({
     error: z.string().optional()
   }),
   execute: async ({ context }) => {
-    const { action, postId, title, content, page = 1, sort = "newest" } = context;
-    let { userId, sessionId } = context;
+    const { action, postId, title, content, page = 1, sort = "newest", sessionId } = context;
+    let { userId } = context;
+    await reporter.trace(`Post Tool: Executing ${action} action`, [
+      { label: InspectionEventLabel.Custom, data: action },
+      { label: InspectionEventLabel.Content, data: JSON.stringify({ postId, title, content, page, sort }) }
+    ]);
     try {
       if (action === "create") {
         if (!userId && sessionId) {
@@ -323,14 +416,25 @@ const hivemindAgent = new Agent({
     - When fetching posts, you can use pagination with page numbers and sorting options (newest, oldest, etc.)
   `,
   model: "google/gemini-flash-lite-latest",
-  tools: { postTool, commentTool, userTool }
+  tools: { postTool, commentTool, userTool },
+  memory: new Memory({
+    storage: new LibSQLStore({
+      url: ":memory:"
+    }),
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 "use strict";
 const mastra = new Mastra({
   agents: {
     hivemindAgent
-  }
+  },
+  storage: new LibSQLStore({
+    url: ":memory:"
+  })
 });
 
 export { mastra };

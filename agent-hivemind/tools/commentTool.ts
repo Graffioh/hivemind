@@ -9,9 +9,9 @@ const commentSchema = z.object({
   post_id: z.number(),
   user_id: z.number(),
   content: z.string(),
-  created_at: z.string(), // API returns as string, can be converted to Date if needed
-  up_vote: z.number().optional(),
-  down_vote: z.number().optional(),
+  created_at: z.string(),
+  up_vote: z.number(),
+  down_vote: z.number(),
 });
 
 const userSchema = z.object({
